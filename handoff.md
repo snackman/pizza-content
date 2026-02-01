@@ -12,25 +12,16 @@ Pizza content repository platform with GIFs, memes, videos, music, and user subm
 
 ## Current Status
 
-### Features Completed & Deployed
+### All 6 Features Completed & Deployed
 
-| Task ID | Feature | Status | Notes |
-|---------|---------|--------|-------|
-| stromboli-53165 | Live Stream Player | ✅ Deployed | /live - fullscreen content cycling |
-| calzone-36389 | Submission Tool | ✅ Deployed | /submit - file upload + URL submission |
-| mozzarella-96056 | Content Requests | ✅ Deployed | /requests - USDC bounties, claims |
-| slice-63030 | Account Dashboard | ✅ Deployed | /account - favorites, history, settings |
-| onion-28645 | Viral Content Import | ✅ Deployed | /admin/imports + 8 import scripts |
-
-### Feature Still Building
-
-| Task ID | Feature | Status |
-|---------|---------|--------|
-| bellpepper-35605 | Pizza Music + Radio | 🔄 Agent still running |
-
-### Testing Agents Running
-- Live Stream Player - Playwright tests
-- Submission Tool - Playwright tests
+| Task ID | Feature | Status | URL |
+|---------|---------|--------|-----|
+| bellpepper-35605 | Pizza Music + Radio | ✅ Deployed | /music, /radio |
+| stromboli-53165 | Live Stream Player | ✅ Deployed | /live |
+| calzone-36389 | Submission Tool | ✅ Deployed | /submit |
+| mozzarella-96056 | Content Requests | ✅ Deployed | /requests |
+| slice-63030 | Account Dashboard | ✅ Deployed | /account |
+| onion-28645 | Viral Content Import | ✅ Deployed | /admin/imports |
 
 ---
 
