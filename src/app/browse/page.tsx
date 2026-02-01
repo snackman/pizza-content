@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Content } from '@/types/database'
 import { ContentCard } from '@/components/content/ContentCard'
 
-type ContentType = 'all' | 'gif' | 'meme' | 'video'
+type ContentType = 'all' | 'gif' | 'meme' | 'video' | 'music'
 
 export default function BrowsePage() {
   const [content, setContent] = useState<Content[]>([])
@@ -57,7 +57,7 @@ export default function BrowsePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl font-bold">Browse All Content</h1>
           <p className="text-purple-100 mt-2">
-            Discover pizza GIFs, memes, and viral videos
+            Discover pizza GIFs, memes, videos, and music
           </p>
         </div>
       </div>
@@ -67,7 +67,7 @@ export default function BrowsePage() {
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           {/* Type Filter */}
           <div className="flex gap-2">
-            {(['all', 'gif', 'meme', 'video'] as ContentType[]).map((type) => (
+            {(['all', 'gif', 'meme', 'video', 'music'] as ContentType[]).map((type) => (
               <button
                 key={type}
                 onClick={() => setFilter(type)}

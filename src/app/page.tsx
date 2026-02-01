@@ -22,6 +22,13 @@ const categories = [
     emoji: '📱',
     color: 'from-red-400 to-pink-500',
   },
+  {
+    title: 'Music',
+    description: 'Pizza vibes and tunes',
+    href: '/music',
+    emoji: '🎵',
+    color: 'from-green-400 to-green-600',
+  },
 ]
 
 export default function HomePage() {
@@ -60,7 +67,7 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
             Explore by Category
           </h2>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {categories.map((category) => (
               <Link
                 key={category.href}

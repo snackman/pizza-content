@@ -11,6 +11,7 @@ export type ContentStatus = 'pending' | 'approved' | 'rejected' | 'featured'
 export type RequestStatus = 'open' | 'in_progress' | 'fulfilled' | 'closed'
 export type ClaimStatus = 'active' | 'completed' | 'abandoned' | 'expired'
 export type RequestPriority = 'low' | 'normal' | 'high' | 'urgent'
+export type ImportLogStatus = 'running' | 'completed' | 'failed'
 
 export interface Database {
   public: {
@@ -273,6 +274,73 @@ export interface Database {
           viewed_at?: string
         }
       }
+      import_sources: {
+        Row: {
+          id: string
+          platform: string
+          source_identifier: string
+          display_name: string | null
+          last_fetched_at: string | null
+          is_active: boolean
+          config: Record<string, unknown>
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          platform: string
+          source_identifier: string
+          display_name?: string | null
+          last_fetched_at?: string | null
+          is_active?: boolean
+          config?: Record<string, unknown>
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          platform?: string
+          source_identifier?: string
+          display_name?: string | null
+          last_fetched_at?: string | null
+          is_active?: boolean
+          config?: Record<string, unknown>
+          created_at?: string
+        }
+      }
+      import_logs: {
+        Row: {
+          id: string
+          source_id: string
+          status: ImportLogStatus
+          items_found: number
+          items_imported: number
+          items_skipped: number
+          error_message: string | null
+          started_at: string
+          completed_at: string | null
+        }
+        Insert: {
+          id?: string
+          source_id: string
+          status: ImportLogStatus
+          items_found?: number
+          items_imported?: number
+          items_skipped?: number
+          error_message?: string | null
+          started_at?: string
+          completed_at?: string | null
+        }
+        Update: {
+          id?: string
+          source_id?: string
+          status?: ImportLogStatus
+          items_found?: number
+          items_imported?: number
+          items_skipped?: number
+          error_message?: string | null
+          started_at?: string
+          completed_at?: string | null
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -295,6 +363,8 @@ export type ContentRequest = Database['public']['Tables']['content_requests']['R
 export type RequestClaim = Database['public']['Tables']['request_claims']['Row']
 export type Favorite = Database['public']['Tables']['favorites']['Row']
 export type ViewHistory = Database['public']['Tables']['view_history']['Row']
+export type ImportSource = Database['public']['Tables']['import_sources']['Row']
+export type ImportLog = Database['public']['Tables']['import_logs']['Row']
 
 // Extended types for joined queries
 export interface ContentRequestWithProfile extends ContentRequest {
