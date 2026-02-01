@@ -180,14 +180,23 @@ Example: `feature/calzone-36389-submission-tool`
 
 ## Database
 - **Project ID**: hecsxlqeviirichoohkl
-- **Tables**: profiles, content, content_requests, favorites, view_history
+- **MCP**: `supabase-pizzacontent` (use `mcp__supabase-pizzacontent__*` tools)
+- **Tables**: profiles, content, content_requests, favorites, view_history, request_claims, import_sources, import_logs
 - **Connection**: Use session pooler for migrations
+
+### Supabase MCP Tools
+```
+mcp__supabase-pizzacontent__execute_sql      - Run SQL queries
+mcp__supabase-pizzacontent__apply_migration  - Apply schema migrations
+mcp__supabase-pizzacontent__list_tables      - List database tables
+mcp__supabase-pizzacontent__list_migrations  - View migration history
+```
 
 ## Content Types
 - `gif` - Animated GIFs
 - `meme` - Static image memes
 - `video` - Video content (external URLs or uploaded)
-- `music` - Audio content (planned)
+- `music` - Audio content (with artist, album, duration)
 
 ## User Preferences
 - **Proactive suggestions**: Instead of asking what to do next, proactively suggest new tasks to work on
