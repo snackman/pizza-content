@@ -130,17 +130,17 @@ export function useAuth() {
   }
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) return { error: new Error('No user logged in') }
+    if (!user) return { error: new Error('No user logged in'), data: null }
 
     const { data, error } = await supabase
       .from('profiles')
-      .update(updates)
+      .update(updates as never)
       .eq('id', user.id)
       .select()
       .single()
 
     if (!error && data) {
-      setProfile(data)
+      setProfile(data as Profile)
     }
 
     return { data, error }
