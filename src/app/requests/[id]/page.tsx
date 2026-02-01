@@ -92,7 +92,7 @@ export default function RequestDetailPage({ params }: RequestDetailPageProps) {
           </Link>
 
           <div className="flex flex-wrap items-center gap-3 mb-4">
-            <StatusBadge status={request.status} size="lg" />
+            <StatusBadge status={request.status || 'open'} size="lg" />
             {request.type && (
               <span className="px-3 py-1 bg-white/20 text-white rounded-full text-sm font-medium">
                 {typeLabels[request.type] || request.type}
@@ -115,7 +115,7 @@ export default function RequestDetailPage({ params }: RequestDetailPageProps) {
                 </span>
               </span>
               <span className="text-orange-200">
-                on {new Date(request.created_at).toLocaleDateString()}
+                on {request.created_at ? new Date(request.created_at).toLocaleDateString() : ''}
               </span>
             </div>
           )}
@@ -155,7 +155,7 @@ export default function RequestDetailPage({ params }: RequestDetailPageProps) {
                 </h2>
                 <div className="space-y-3">
                   {activeClaims.map((claim) => {
-                    const expiresAt = new Date(claim.expires_at)
+                    const expiresAt = claim.expires_at ? new Date(claim.expires_at) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
                     const daysLeft = Math.ceil(
                       (expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
                     )
@@ -175,7 +175,7 @@ export default function RequestDetailPage({ params }: RequestDetailPageProps) {
                               {claim.user?.display_name || 'Anonymous'}
                             </p>
                             <p className="text-xs text-gray-500">
-                              Claimed {new Date(claim.claimed_at).toLocaleDateString()}
+                              Claimed {claim.claimed_at ? new Date(claim.claimed_at).toLocaleDateString() : ''}
                             </p>
                           </div>
                         </div>
@@ -209,7 +209,7 @@ export default function RequestDetailPage({ params }: RequestDetailPageProps) {
               <div className="text-center mb-6">
                 <p className="text-sm text-gray-500 mb-2">Bounty</p>
                 <div className="flex justify-center">
-                  <BountyBadge amount={request.bounty_amount} size="lg" />
+                  <BountyBadge amount={request.bounty_amount || 0} size="lg" />
                 </div>
               </div>
 
@@ -265,13 +265,13 @@ export default function RequestDetailPage({ params }: RequestDetailPageProps) {
                 <div className="flex justify-between">
                   <dt className="text-gray-500">Status</dt>
                   <dd>
-                    <StatusBadge status={request.status} size="sm" />
+                    <StatusBadge status={request.status || 'open'} size="sm" />
                   </dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-gray-500">Created</dt>
                   <dd className="text-gray-900">
-                    {new Date(request.created_at).toLocaleDateString()}
+                    {request.created_at ? new Date(request.created_at).toLocaleDateString() : ''}
                   </dd>
                 </div>
                 <div className="flex justify-between">

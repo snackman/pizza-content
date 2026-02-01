@@ -64,7 +64,7 @@ export function Header() {
                       {profile?.display_name?.[0]?.toUpperCase() || '?'}
                     </span>
                     {profile?.is_pizzeria && (
-                      <PizzeriaBadge isVerified={profile.is_verified} size="sm" showLabel={false} />
+                      <PizzeriaBadge isVerified={profile.is_verified ?? false} size="sm" showLabel={false} />
                     )}
                   </button>
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
@@ -78,7 +78,7 @@ export function Header() {
                       )}
                       {profile?.is_pizzeria && (
                         <div className="mt-1">
-                          <PizzeriaBadge isVerified={profile.is_verified} size="sm" />
+                          <PizzeriaBadge isVerified={profile.is_verified ?? false} size="sm" />
                         </div>
                       )}
                     </div>

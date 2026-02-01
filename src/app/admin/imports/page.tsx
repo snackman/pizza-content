@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ImportSourceCard, ImportSource } from '@/components/admin/ImportSourceCard'
 import { ImportLogTable, ImportLog } from '@/components/admin/ImportLogTable'
@@ -24,7 +24,8 @@ export default function AdminImportsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const supabase = createClient()
+  // Memoize supabase client to prevent recreation on each render
+  const supabase = useMemo(() => createClient(), [])
 
   const fetchData = useCallback(async () => {
     setIsLoading(true)
@@ -38,7 +39,7 @@ export default function AdminImportsPage() {
         .order('platform', { ascending: true })
 
       if (sourcesError) throw sourcesError
-      setSources(sourcesData || [])
+      setSources((sourcesData as ImportSource[]) || [])
 
       // Fetch recent import logs with source info
       const { data: logsData, error: logsError } = await supabase
@@ -55,19 +56,21 @@ export default function AdminImportsPage() {
         .limit(20)
 
       if (logsError) throw logsError
-      setLogs(logsData || [])
+      setLogs((logsData as ImportLog[]) || [])
 
       // Calculate stats
-      const totalSources = sourcesData?.length || 0
-      const activeSources = sourcesData?.filter(s => s.is_active).length || 0
-      const totalImported = logsData?.reduce((sum, log) => sum + (log.items_imported || 0), 0) || 0
+      const typedSources = (sourcesData as ImportSource[]) || []
+      const typedLogs = (logsData as ImportLog[]) || []
+      const totalSources = typedSources.length
+      const activeSources = typedSources.filter(s => s.is_active).length
+      const totalImported = typedLogs.reduce((sum, log) => sum + (log.items_imported || 0), 0)
 
       // Count imports in the last 24 hours
       const oneDayAgo = new Date()
       oneDayAgo.setDate(oneDayAgo.getDate() - 1)
-      const recentImports = logsData?.filter(
-        log => new Date(log.started_at) > oneDayAgo
-      ).length || 0
+      const recentImports = typedLogs.filter(
+        log => log.started_at && new Date(log.started_at) > oneDayAgo
+      ).length
 
       setStats({
         totalSources,

@@ -94,7 +94,7 @@ export function Sidebar() {
         {/* Pizzeria Badge */}
         {profile?.is_pizzeria && (
           <div className="mb-6">
-            <PizzeriaBadge isVerified={profile.is_verified} size="sm" />
+            <PizzeriaBadge isVerified={profile.is_verified ?? false} size="sm" />
           </div>
         )}
 
@@ -171,7 +171,7 @@ export function MobileSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: (
           {/* Pizzeria Badge */}
           {profile?.is_pizzeria && (
             <div className="mb-6">
-              <PizzeriaBadge isVerified={profile.is_verified} size="sm" />
+              <PizzeriaBadge isVerified={profile.is_verified ?? false} size="sm" />
             </div>
           )}
 

@@ -29,8 +29,8 @@ export function RequestCard({ request, showRequester = true }: RequestCardProps)
       <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all border border-gray-100 h-full flex flex-col">
         {/* Header with badges */}
         <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-2">
-          <StatusBadge status={request.status} size="sm" />
-          <BountyBadge amount={request.bounty_amount} size="sm" />
+          <StatusBadge status={request.status || 'open'} size="sm" />
+          <BountyBadge amount={request.bounty_amount || 0} size="sm" />
         </div>
 
         {/* Content */}

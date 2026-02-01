@@ -126,7 +126,7 @@ export default function MyContentPage() {
             <div key={item.id} className="relative">
               <ContentCard item={item} showType />
               <div className="absolute top-12 left-2">
-                <StatusBadge status={item.status} size="sm" />
+                <StatusBadge status={item.status || 'pending'} size="sm" />
               </div>
             </div>
           ))}

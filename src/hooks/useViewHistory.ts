@@ -45,6 +45,7 @@ function groupByDate(items: ViewHistoryItem[]): GroupedHistory {
   }
 
   for (const item of items) {
+    if (!item.viewed_at) continue
     const viewedAt = new Date(item.viewed_at)
 
     if (viewedAt >= today) {

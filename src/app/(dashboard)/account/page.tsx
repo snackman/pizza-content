@@ -82,7 +82,7 @@ export default function AccountPage() {
               )}
               {profile?.is_pizzeria && (
                 <div className="mt-2">
-                  <PizzeriaBadge isVerified={profile.is_verified} />
+                  <PizzeriaBadge isVerified={profile.is_verified ?? false} />
                 </div>
               )}
               {profile?.bio && (
@@ -207,7 +207,7 @@ export default function AccountPage() {
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 truncate">{item.title}</p>
                   <p className="text-sm text-gray-500">
-                    {new Date(item.created_at).toLocaleDateString()}
+                    {item.created_at ? new Date(item.created_at).toLocaleDateString() : ''}
                   </p>
                 </div>
                 <span className={`

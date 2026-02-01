@@ -38,7 +38,7 @@ export function ClaimButton({
 
   // Check if claim is expired
   const isClaimExpired =
-    existingClaim && new Date(existingClaim.expires_at) < new Date()
+    existingClaim && existingClaim.expires_at && new Date(existingClaim.expires_at) < new Date()
 
   const handleClaim = async () => {
     if (!userId) {
@@ -174,7 +174,7 @@ export function ClaimButton({
 
   // User has active claim
   if (hasActiveClaim && !isClaimExpired) {
-    const expiresAt = new Date(existingClaim!.expires_at)
+    const expiresAt = existingClaim!.expires_at ? new Date(existingClaim!.expires_at) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
 
     return (
