@@ -1,18 +1,21 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { ContentCard } from '@/components/content/ContentCard'
+import { Content } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
 
 export default async function GifsPage() {
   const supabase = await createClient()
 
-  const { data: gifs, error } = await supabase
+  const { data, error } = await supabase
     .from('content')
     .select('*')
     .eq('type', 'gif')
     .in('status', ['approved', 'featured'])
     .order('created_at', { ascending: false })
+
+  const gifs = (data || []) as Content[]
 
   if (error) {
     console.error('Error fetching gifs:', error)
