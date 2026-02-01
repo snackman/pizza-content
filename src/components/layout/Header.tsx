@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
+import { PizzeriaBadge } from '@/components/ui/PizzeriaBadge'
 
 export function Header() {
   const { isAuthenticated, profile, isLoading, signOut } = useAuth()
@@ -26,6 +27,9 @@ export function Header() {
             </Link>
             <Link href="/videos" className="text-gray-600 hover:text-orange-600 font-medium">
               Videos
+            </Link>
+            <Link href="/live" className="text-gray-600 hover:text-orange-600 font-medium">
+              Live Stream
             </Link>
             <Link href="/requests" className="text-gray-600 hover:text-orange-600 font-medium">
               Requests

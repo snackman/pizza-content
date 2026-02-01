@@ -90,7 +90,7 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
             Features
           </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-8">
             <div className="text-center">
               <div className="text-4xl mb-4">📤</div>
               <h3 className="font-bold text-gray-900 mb-2">Submit Content</h3>
@@ -111,6 +111,11 @@ export default function HomePage() {
               <h3 className="font-bold text-gray-900 mb-2">Viral Content</h3>
               <p className="text-gray-600">Discover trending pizza content from across the web</p>
             </div>
+            <Link href="/live" className="text-center group">
+              <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">📺</div>
+              <h3 className="font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">Live Stream</h3>
+              <p className="text-gray-600">Fullscreen display for pizzerias and broadcasts</p>
+            </Link>
           </div>
         </div>
       </section>
