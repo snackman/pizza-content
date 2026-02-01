@@ -1,0 +1,13 @@
+{
+    "lastCheck":  "2026-02-01T15:38:05.1875969-05:00",
+    "migrationCount":  3,
+    "srcFolders":  [
+                       "app",
+                       "components",
+                       "hooks",
+                       "lib",
+                       "types"
+                   ],
+    "claudeMdModified":  null,
+    "packageJsonHash":  "09D843A57662D6CE"
+}
