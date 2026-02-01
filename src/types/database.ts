@@ -6,9 +6,11 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type ContentType = 'gif' | 'meme' | 'video'
+export type ContentType = 'gif' | 'meme' | 'video' | 'music'
 export type ContentStatus = 'pending' | 'approved' | 'rejected' | 'featured'
 export type RequestStatus = 'open' | 'in_progress' | 'fulfilled' | 'closed'
+export type ClaimStatus = 'active' | 'completed' | 'abandoned' | 'expired'
+export type RequestPriority = 'low' | 'normal' | 'high' | 'urgent'
 
 export interface Database {
   public: {
@@ -20,6 +22,17 @@ export interface Database {
           display_name: string | null
           avatar_url: string | null
           is_pizzeria: boolean
+          business_name: string | null
+          business_address: string | null
+          city: string | null
+          state: string | null
+          country: string | null
+          postal_code: string | null
+          website_url: string | null
+          phone: string | null
+          is_verified: boolean
+          verified_at: string | null
+          bio: string | null
           created_at: string
           updated_at: string
         }
@@ -29,6 +42,17 @@ export interface Database {
           display_name?: string | null
           avatar_url?: string | null
           is_pizzeria?: boolean
+          business_name?: string | null
+          business_address?: string | null
+          city?: string | null
+          state?: string | null
+          country?: string | null
+          postal_code?: string | null
+          website_url?: string | null
+          phone?: string | null
+          is_verified?: boolean
+          verified_at?: string | null
+          bio?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -38,6 +62,17 @@ export interface Database {
           display_name?: string | null
           avatar_url?: string | null
           is_pizzeria?: boolean
+          business_name?: string | null
+          business_address?: string | null
+          city?: string | null
+          state?: string | null
+          country?: string | null
+          postal_code?: string | null
+          website_url?: string | null
+          phone?: string | null
+          is_verified?: boolean
+          verified_at?: string | null
+          bio?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -59,6 +94,12 @@ export interface Database {
           submitted_by: string | null
           created_at: string
           updated_at: string
+          // Music-specific fields
+          duration_seconds: number | null
+          artist: string | null
+          album: string | null
+          // Request fulfillment
+          fulfills_request_id: string | null
         }
         Insert: {
           id?: string
@@ -76,6 +117,12 @@ export interface Database {
           submitted_by?: string | null
           created_at?: string
           updated_at?: string
+          // Music-specific fields
+          duration_seconds?: number | null
+          artist?: string | null
+          album?: string | null
+          // Request fulfillment
+          fulfills_request_id?: string | null
         }
         Update: {
           id?: string
@@ -93,6 +140,12 @@ export interface Database {
           submitted_by?: string | null
           created_at?: string
           updated_at?: string
+          // Music-specific fields
+          duration_seconds?: number | null
+          artist?: string | null
+          album?: string | null
+          // Request fulfillment
+          fulfills_request_id?: string | null
         }
       }
       content_requests: {
@@ -105,6 +158,13 @@ export interface Database {
           status: RequestStatus
           requested_by: string | null
           fulfilled_by: string | null
+          bounty_amount: number
+          bounty_currency: string
+          claimed_by: string | null
+          claimed_at: string | null
+          deadline: string | null
+          is_featured: boolean
+          priority: string
           created_at: string
           updated_at: string
         }
@@ -117,6 +177,13 @@ export interface Database {
           status?: RequestStatus
           requested_by?: string | null
           fulfilled_by?: string | null
+          bounty_amount?: number
+          bounty_currency?: string
+          claimed_by?: string | null
+          claimed_at?: string | null
+          deadline?: string | null
+          is_featured?: boolean
+          priority?: string
           created_at?: string
           updated_at?: string
         }
@@ -129,8 +196,41 @@ export interface Database {
           status?: RequestStatus
           requested_by?: string | null
           fulfilled_by?: string | null
+          bounty_amount?: number
+          bounty_currency?: string
+          claimed_by?: string | null
+          claimed_at?: string | null
+          deadline?: string | null
+          is_featured?: boolean
+          priority?: string
           created_at?: string
           updated_at?: string
+        }
+      }
+      request_claims: {
+        Row: {
+          id: string
+          request_id: string
+          user_id: string
+          claimed_at: string
+          expires_at: string
+          status: ClaimStatus
+        }
+        Insert: {
+          id?: string
+          request_id: string
+          user_id: string
+          claimed_at?: string
+          expires_at?: string
+          status?: ClaimStatus
+        }
+        Update: {
+          id?: string
+          request_id?: string
+          user_id?: string
+          claimed_at?: string
+          expires_at?: string
+          status?: ClaimStatus
         }
       }
       favorites: {
@@ -184,6 +284,7 @@ export interface Database {
       content_type: ContentType
       content_status: ContentStatus
       request_status: RequestStatus
+      claim_status: ClaimStatus
     }
   }
 }
@@ -191,5 +292,27 @@ export interface Database {
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Content = Database['public']['Tables']['content']['Row']
 export type ContentRequest = Database['public']['Tables']['content_requests']['Row']
+export type RequestClaim = Database['public']['Tables']['request_claims']['Row']
 export type Favorite = Database['public']['Tables']['favorites']['Row']
 export type ViewHistory = Database['public']['Tables']['view_history']['Row']
+
+// Extended types for joined queries
+export interface ContentRequestWithProfile extends ContentRequest {
+  requester?: Profile | null
+  claimer?: Profile | null
+}
+
+export interface RequestClaimWithProfile extends RequestClaim {
+  user?: Profile | null
+}
+
+// Submission form data type
+export interface SubmissionFormData {
+  type: ContentType
+  title: string
+  description?: string
+  file?: File
+  url?: string
+  source_url?: string
+  tags: string[]
+}
