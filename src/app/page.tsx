@@ -29,6 +29,13 @@ const categories = [
     emoji: '🎵',
     color: 'from-green-400 to-green-600',
   },
+  {
+    title: 'Art',
+    description: 'Creative pizza masterpieces',
+    href: '/art',
+    emoji: '🎨',
+    color: 'from-pink-400 to-purple-600',
+  },
 ]
 
 export default function HomePage() {

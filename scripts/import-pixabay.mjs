@@ -189,7 +189,7 @@ function transformPhoto(photo) {
   const isViral = photo.downloads > 10000 || photo.likes > 500
 
   return {
-    type: 'meme',
+    type: 'photo',
     title: title.slice(0, 200),
     url: photo.webformatURL, // 640px
     thumbnail_url: photo.previewURL, // 150px

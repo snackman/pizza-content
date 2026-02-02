@@ -174,7 +174,7 @@ function transformPhoto(photo) {
   const description = `Photo by ${photographer} on Pexels`
 
   return {
-    type: 'meme',
+    type: 'photo',
     title: title.slice(0, 200),
     url: photo.src.large, // 940px
     thumbnail_url: photo.src.medium, // 350px

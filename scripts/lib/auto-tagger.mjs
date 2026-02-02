@@ -103,10 +103,42 @@ export function suggestContentType(url) {
   return 'meme';
 }
 
+/**
+ * AutoTagger class for content-importer compatibility
+ */
+export class AutoTagger {
+  extractFromContent({ title, description, platform, type }) {
+    const tags = new Set(['pizza']);
+
+    // Extract from title
+    if (title) {
+      extractTagsFromTitle(title).forEach(tag => tags.add(tag));
+    }
+
+    // Extract from description
+    if (description) {
+      extractTagsFromTitle(description).forEach(tag => tags.add(tag));
+    }
+
+    // Add platform tag
+    if (platform) {
+      tags.add(platform.toLowerCase());
+    }
+
+    // Add type tag
+    if (type) {
+      tags.add(type);
+    }
+
+    return Array.from(tags).slice(0, 10);
+  }
+}
+
 export default {
   extractTagsFromTitle,
   extractTagsFromFilename,
   mergeTags,
   suggestContentType,
+  AutoTagger,
   PIZZA_KEYWORDS
 };

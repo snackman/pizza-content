@@ -29,6 +29,8 @@ const typeOptions: { value: ContentType | 'all'; label: string }[] = [
   { value: 'meme', label: 'Memes' },
   { value: 'video', label: 'Videos' },
   { value: 'music', label: 'Music' },
+  { value: 'photo', label: 'Photos' },
+  { value: 'art', label: 'Art' },
 ]
 
 const sortOptions: { value: 'newest' | 'bounty' | 'deadline'; label: string }[] = [

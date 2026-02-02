@@ -84,7 +84,7 @@ export default function MyContentPage() {
 
       {/* Filters */}
       <div className="flex gap-2 flex-wrap">
-        {(['all', 'gif', 'meme', 'video'] as const).map((type) => (
+        {(['all', 'gif', 'meme', 'video', 'music', 'photo', 'art'] as const).map((type) => (
           <button
             key={type}
             onClick={() => setFilter(type)}
@@ -96,7 +96,7 @@ export default function MyContentPage() {
               }
             `}
           >
-            {type === 'all' ? 'All' : type.toUpperCase() + 's'}
+            {type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1) + (type === 'music' ? '' : 's')}
           </button>
         ))}
       </div>
@@ -140,10 +140,13 @@ export default function MyContentPage() {
             <span>
               Showing {filteredContent.length} of {content.length} items
             </span>
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-wrap">
               <span>GIFs: {content.filter(c => c.type === 'gif').length}</span>
               <span>Memes: {content.filter(c => c.type === 'meme').length}</span>
               <span>Videos: {content.filter(c => c.type === 'video').length}</span>
+              <span>Music: {content.filter(c => c.type === 'music').length}</span>
+              <span>Photos: {content.filter(c => c.type === 'photo').length}</span>
+              <span>Art: {content.filter(c => c.type === 'art').length}</span>
             </div>
           </div>
         </div>

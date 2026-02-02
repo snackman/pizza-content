@@ -440,7 +440,7 @@ export type Database = {
     }
     Enums: {
       content_status: "pending" | "approved" | "rejected" | "featured"
-      content_type: "gif" | "meme" | "video" | "music" | "photo"
+      content_type: "gif" | "meme" | "video" | "music" | "photo" | "art"
       request_status: "open" | "in_progress" | "fulfilled" | "closed"
     }
     CompositeTypes: {
@@ -570,7 +570,7 @@ export const Constants = {
   public: {
     Enums: {
       content_status: ["pending", "approved", "rejected", "featured"],
-      content_type: ["gif", "meme", "video", "music", "photo"],
+      content_type: ["gif", "meme", "video", "music", "photo", "art"],
       request_status: ["open", "in_progress", "fulfilled", "closed"],
     },
   },

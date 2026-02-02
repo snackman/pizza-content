@@ -16,6 +16,7 @@ const typeColors: Record<string, string> = {
   video: 'bg-red-500',
   music: 'bg-green-500',
   photo: 'bg-blue-500',
+  art: 'bg-pink-500',
 }
 
 export function ContentCard({ item, showType = false, showFavorite = true }: ContentCardProps) {
@@ -127,18 +128,35 @@ export function ContentCard({ item, showType = false, showFavorite = true }: Con
         <h3 className="font-medium text-gray-900 truncate" title={item.title}>
           {item.title}
         </h3>
-        {item.tags && item.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {item.tags.slice(0, 2).map((tag) => (
-              <span
-                key={tag}
-                className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
+        <div className="flex items-center justify-between mt-2">
+          {item.tags && item.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {item.tags.slice(0, 2).map((tag) => (
+                <span
+                  key={tag}
+                  className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+          {item.source_url && (
+            <a
+              href={item.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+              title={`View on ${item.source_platform || 'source'}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              {item.source_platform || 'source'}
+            </a>
+          )}
+        </div>
       </div>
     </div>
   )

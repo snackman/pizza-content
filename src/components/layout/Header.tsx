@@ -31,6 +31,9 @@ export function Header() {
             <Link href="/photos" className="text-gray-600 hover:text-blue-600 font-medium">
               Photos
             </Link>
+            <Link href="/art" className="text-gray-600 hover:text-pink-600 font-medium">
+              Art
+            </Link>
             <Link href="/music" className="text-gray-600 hover:text-green-600 font-medium">
               Music
             </Link>

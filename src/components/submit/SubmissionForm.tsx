@@ -194,7 +194,7 @@ export function SubmissionForm() {
               Content Type
             </label>
             <div className="flex gap-3 flex-wrap">
-              {(['gif', 'meme', 'video', 'music'] as ContentType[]).map((type) => (
+              {(['gif', 'meme', 'video', 'music', 'photo', 'art'] as ContentType[]).map((type) => (
                 <button
                   key={type}
                   type="button"
@@ -210,7 +210,7 @@ export function SubmissionForm() {
                   `}
                 >
                   <span className="block text-lg mb-1">
-                    {type === 'gif' ? '🎞' : type === 'meme' ? '🖼' : type === 'video' ? '🎬' : '🎵'}
+                    {type === 'gif' ? '🎞' : type === 'meme' ? '🖼' : type === 'video' ? '🎬' : type === 'music' ? '🎵' : type === 'photo' ? '📸' : '🎨'}
                   </span>
                   <span className="capitalize">{type}</span>
                 </button>
