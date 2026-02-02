@@ -7,6 +7,7 @@ export const FILE_SIZE_LIMITS: Record<ContentType, number> = {
   meme: 5 * 1024 * 1024, // 5MB (images)
   video: 50 * 1024 * 1024, // 50MB
   music: 20 * 1024 * 1024, // 20MB
+  photo: 10 * 1024 * 1024, // 10MB
 }
 
 // Allowed file extensions by type
@@ -15,6 +16,7 @@ export const ALLOWED_EXTENSIONS: Record<ContentType, string[]> = {
   meme: ['.jpg', '.jpeg', '.png', '.webp'],
   video: ['.mp4', '.webm'],
   music: ['.mp3', '.wav', '.ogg', '.m4a'],
+  photo: ['.jpg', '.jpeg', '.png', '.webp'],
 }
 
 // Allowed MIME types by content type
@@ -23,6 +25,7 @@ export const ALLOWED_MIME_TYPES: Record<ContentType, string[]> = {
   meme: ['image/jpeg', 'image/png', 'image/webp'],
   video: ['video/mp4', 'video/webm'],
   music: ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp4', 'audio/x-m4a'],
+  photo: ['image/jpeg', 'image/png', 'image/webp'],
 }
 
 // External URL patterns

@@ -131,6 +131,7 @@ export function ContentPreview({
     meme: 'bg-yellow-500',
     video: 'bg-red-500',
     music: 'bg-purple-500',
+    photo: 'bg-blue-500',
   }
 
   if (!title && !file && !url) {

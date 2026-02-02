@@ -101,7 +101,7 @@ export function ContentDisplay({
           <img
             src={displayedContent.url}
             alt={displayedContent.title}
-            className={`w-full h-full object-cover transition-opacity duration-200 ${
+            className={`w-full h-full object-contain transition-opacity duration-200 ${
               imageLoaded ? 'opacity-100' : 'opacity-0'
             }`}
             onLoad={() => setImageLoaded(true)}

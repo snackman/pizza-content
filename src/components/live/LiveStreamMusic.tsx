@@ -22,14 +22,12 @@ export function LiveStreamMusic({ enabled, volume }: LiveStreamMusicProps) {
   const [tracks, setTracks] = useState<Content[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const supabase = createClient()
 
   // Fetch music tracks
   useEffect(() => {
     async function fetchTracks() {
-      setIsLoading(true)
       const { data } = await supabase
         .from('content')
         .select('*')
@@ -40,7 +38,6 @@ export function LiveStreamMusic({ enabled, volume }: LiveStreamMusicProps) {
       if (data && data.length > 0) {
         setTracks(shuffleArray(data))
       }
-      setIsLoading(false)
     }
     fetchTracks()
   }, [supabase])
@@ -84,7 +81,7 @@ export function LiveStreamMusic({ enabled, volume }: LiveStreamMusicProps) {
     setCurrentIndex((prev) => (prev + 1) % tracks.length)
   }, [tracks.length])
 
-  if (!enabled || tracks.length === 0 || isLoading) return null
+  if (!enabled || tracks.length === 0) return null
 
   return (
     <div className="absolute bottom-4 left-4 z-30">
@@ -105,8 +102,8 @@ export function LiveStreamMusic({ enabled, volume }: LiveStreamMusicProps) {
           {isPlaying ? (
             <div className="flex gap-0.5">
               <div className="w-1 h-3 bg-green-500 animate-pulse" />
-              <div className="w-1 h-4 bg-green-500 animate-pulse" style={{ animationDelay: '75ms' }} />
-              <div className="w-1 h-2 bg-green-500 animate-pulse" style={{ animationDelay: '150ms' }} />
+              <div className="w-1 h-4 bg-green-500 animate-pulse delay-75" />
+              <div className="w-1 h-2 bg-green-500 animate-pulse delay-150" />
             </div>
           ) : (
             <svg className="w-4 h-4 text-white/50" fill="currentColor" viewBox="0 0 24 24">
