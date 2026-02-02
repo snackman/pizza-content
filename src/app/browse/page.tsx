@@ -77,7 +77,7 @@ export default function BrowsePage() {
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                {type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1) + 's'}
+                {type === 'all' ? 'All' : type === 'music' || type === 'art' ? type.charAt(0).toUpperCase() + type.slice(1) : type.charAt(0).toUpperCase() + type.slice(1) + 's'}
               </button>
             ))}
           </div>
