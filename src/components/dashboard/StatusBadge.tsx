@@ -25,6 +25,14 @@ const statusConfig: Record<ContentStatus, { label: string; className: string }> 
     label: 'Featured',
     className: 'bg-purple-100 text-purple-800',
   },
+  flagged_not_pizza: {
+    label: 'Not Pizza',
+    className: 'bg-orange-100 text-orange-800',
+  },
+  flagged_broken: {
+    label: 'Broken',
+    className: 'bg-gray-100 text-gray-800',
+  },
 }
 
 export function StatusBadge({
