@@ -52,29 +52,22 @@ export default function AdminPage() {
       setIsLoading(true)
 
       // Fetch platform stats
-      const { data: platformData } = await supabase.rpc('get_platform_stats').select('*')
+      const { data } = await supabase
+        .from('content')
+        .select('source_platform, status')
 
-      // Fallback: manual query if RPC doesn't exist
-      if (!platformData) {
-        const { data } = await supabase
-          .from('content')
-          .select('source_platform, status')
-
-        if (data) {
-          const stats: Record<string, PlatformStats> = {}
-          data.forEach(item => {
-            const platform = item.source_platform || 'unknown'
-            if (!stats[platform]) {
-              stats[platform] = { platform, count: 0, flagged_broken: 0, flagged_not_pizza: 0 }
-            }
-            stats[platform].count++
-            if (item.status === 'flagged_broken') stats[platform].flagged_broken++
-            if (item.status === 'flagged_not_pizza') stats[platform].flagged_not_pizza++
-          })
-          setPlatformStats(Object.values(stats).sort((a, b) => b.count - a.count))
-        }
-      } else {
-        setPlatformStats(platformData)
+      if (data) {
+        const stats: Record<string, PlatformStats> = {}
+        data.forEach(item => {
+          const platform = item.source_platform || 'unknown'
+          if (!stats[platform]) {
+            stats[platform] = { platform, count: 0, flagged_broken: 0, flagged_not_pizza: 0 }
+          }
+          stats[platform].count++
+          if (item.status === 'flagged_broken') stats[platform].flagged_broken++
+          if (item.status === 'flagged_not_pizza') stats[platform].flagged_not_pizza++
+        })
+        setPlatformStats(Object.values(stats).sort((a, b) => b.count - a.count))
       }
 
       // Fetch type stats
