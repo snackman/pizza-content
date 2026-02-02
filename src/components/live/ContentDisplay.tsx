@@ -74,7 +74,7 @@ export function ContentDisplay({
         <video
           ref={videoRef}
           src={displayedContent.url}
-          className="max-w-full max-h-full object-contain"
+          className="w-full h-full object-cover"
           autoPlay
           muted
           loop={!onVideoEnd}
@@ -92,7 +92,7 @@ export function ContentDisplay({
           <img
             src={displayedContent.url}
             alt={displayedContent.title}
-            className={`max-w-full max-h-full object-contain transition-opacity duration-200 ${
+            className={`w-full h-full object-cover transition-opacity duration-200 ${
               imageLoaded ? 'opacity-100' : 'opacity-0'
             }`}
             onLoad={() => setImageLoaded(true)}
