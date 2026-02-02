@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useLiveStream, LiveStreamSettings } from '@/hooks/useLiveStream'
 import { ContentDisplay } from './ContentDisplay'
 import { LiveStreamControls } from './LiveStreamControls'
+import { LiveStreamMusic } from './LiveStreamMusic'
 
 interface LiveStreamPlayerProps {
   initialSettings?: Partial<LiveStreamSettings>
@@ -230,6 +231,12 @@ export function LiveStreamPlayer({ initialSettings }: LiveStreamPlayerProps) {
         content={currentContent}
         showInfo={settings.showInfo}
         isPlaying={isPlaying}
+      />
+
+      {/* Music Player */}
+      <LiveStreamMusic
+        enabled={audioEnabled && settings.musicEnabled}
+        volume={settings.musicVolume}
       />
 
       {/* Audio Enable Prompt (shown initially) */}

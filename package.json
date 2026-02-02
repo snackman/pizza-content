@@ -10,7 +10,16 @@
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "test:submission": "playwright test tests/submission-tool.spec.ts",
-    "sync-music": "node scripts/sync-gdrive-music.mjs"
+    "sync-music": "node scripts/sync-gdrive-music.mjs",
+    "import-giphy": "node scripts/import-giphy.mjs",
+    "import-reddit": "node scripts/import-reddit.mjs",
+    "import-tenor": "node scripts/import-tenor.mjs",
+    "import-imgur": "node scripts/import-imgur.mjs",
+    "import-pexels": "node scripts/import-pexels.mjs",
+    "import-pixabay": "node scripts/import-pixabay.mjs",
+    "import-youtube": "node scripts/import-youtube.mjs",
+    "import-9gag": "node scripts/import-9gag.mjs",
+    "import-kym": "node scripts/import-knowyourmeme.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
