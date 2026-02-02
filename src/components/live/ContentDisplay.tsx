@@ -63,6 +63,7 @@ export function ContentDisplay({
   }
 
   const isVideo = displayedContent.type === 'video'
+  const isYouTube = displayedContent.url?.includes('youtube.com') || displayedContent.url?.includes('youtu.be')
 
   return (
     <div
@@ -70,7 +71,15 @@ export function ContentDisplay({
         isTransitioning ? 'opacity-0' : 'opacity-100'
       }`}
     >
-      {isVideo ? (
+      {isVideo && isYouTube ? (
+        <iframe
+          src={`${displayedContent.url}?autoplay=1&mute=1`}
+          className="w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          title={displayedContent.title}
+        />
+      ) : isVideo ? (
         <video
           ref={videoRef}
           src={displayedContent.url}
