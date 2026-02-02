@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { useState } from 'react'
 import { Content } from '@/types/database'
 import { FavoriteButton } from '@/components/ui/FavoriteButton'
 
@@ -8,6 +9,7 @@ interface ContentCardProps {
   item: Content
   showType?: boolean
   showFavorite?: boolean
+  onFlagged?: (id: string) => void
 }
 
 const typeColors: Record<string, string> = {
@@ -19,9 +21,30 @@ const typeColors: Record<string, string> = {
   art: 'bg-pink-500',
 }
 
-export function ContentCard({ item, showType = false, showFavorite = true }: ContentCardProps) {
+export function ContentCard({ item, showType = false, showFavorite = true, onFlagged }: ContentCardProps) {
+  const [showFlagMenu, setShowFlagMenu] = useState(false)
+  const [isFlagging, setIsFlagging] = useState(false)
   const isVideo = item.type === 'video'
   const isMusic = item.type === 'music'
+
+  const handleFlag = async (reason: 'not_pizza' | 'broken') => {
+    setIsFlagging(true)
+    try {
+      const response = await fetch('/api/content/flag', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contentId: item.id, reason }),
+      })
+      if (response.ok) {
+        setShowFlagMenu(false)
+        onFlagged?.(item.id)
+      }
+    } catch (error) {
+      console.error('Failed to flag content:', error)
+    } finally {
+      setIsFlagging(false)
+    }
+  }
 
   const handleDownload = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -122,6 +145,49 @@ export function ContentCard({ item, showType = false, showFavorite = true }: Con
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
           </button>
+
+          {/* Flag button */}
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setShowFlagMenu(!showFlagMenu)
+              }}
+              className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70"
+              title="Flag content"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+              </svg>
+            </button>
+            {showFlagMenu && (
+              <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg py-1 z-10 min-w-[140px]">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    handleFlag('not_pizza')
+                  }}
+                  disabled={isFlagging}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                >
+                  🍕 Not Pizza
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    handleFlag('broken')
+                  }}
+                  disabled={isFlagging}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                >
+                  ⚠️ Broken
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
       <div className="p-4">

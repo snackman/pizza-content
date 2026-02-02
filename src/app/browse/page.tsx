@@ -22,7 +22,7 @@ export default function BrowsePage() {
       let query = supabase
         .from('content')
         .select('*')
-        .in('status', ['approved', 'featured'])
+        .in('status', ['approved', 'featured', 'pending'])
         .order('created_at', { ascending: false })
 
       if (filter !== 'all') {

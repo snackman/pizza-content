@@ -439,7 +439,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      content_status: "pending" | "approved" | "rejected" | "featured"
+      content_status: "pending" | "approved" | "rejected" | "featured" | "flagged_not_pizza" | "flagged_broken"
       content_type: "gif" | "meme" | "video" | "music" | "photo" | "art"
       request_status: "open" | "in_progress" | "fulfilled" | "closed"
     }
@@ -569,7 +569,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      content_status: ["pending", "approved", "rejected", "featured"],
+      content_status: ["pending", "approved", "rejected", "featured", "flagged_not_pizza", "flagged_broken"],
       content_type: ["gif", "meme", "video", "music", "photo", "art"],
       request_status: ["open", "in_progress", "fulfilled", "closed"],
     },
