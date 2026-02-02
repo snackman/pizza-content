@@ -142,7 +142,7 @@ function transformPhoto(photo) {
   const isViral = photo.likes > 500
 
   return {
-    type: 'meme', // Unsplash photos are high-quality images
+    type: 'photo', // Unsplash photos are high-quality images
     title: title.slice(0, 200),
     url: photo.urls.regular, // 1080px wide
     thumbnail_url: photo.urls.small, // 400px wide

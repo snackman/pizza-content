@@ -19,7 +19,13 @@
     "import-pixabay": "node scripts/import-pixabay.mjs",
     "import-youtube": "node scripts/import-youtube.mjs",
     "import-9gag": "node scripts/import-9gag.mjs",
-    "import-kym": "node scripts/import-knowyourmeme.mjs"
+    "import-kym": "node scripts/import-knowyourmeme.mjs",
+    "import-unsplash": "node scripts/import-unsplash.mjs",
+    "import-pinterest": "node scripts/import-pinterest.mjs",
+    "import-dribbble": "node scripts/import-dribbble.mjs",
+    "import-deviantart": "node scripts/import-deviantart.mjs",
+    "import-tiktok": "node scripts/import-tiktok.mjs",
+    "import-tumblr": "node scripts/import-tumblr.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
