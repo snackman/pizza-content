@@ -16,9 +16,14 @@ Pizza content repository platform with GIFs, memes, videos, music, photos, and u
 
 | Feature | URL | Status |
 |---------|-----|--------|
-| Pizza Music | /music | 244 tracks from Google Drive |
-| Pizza Radio | /radio | Streaming player |
+| GIFs | /gifs | 63 GIFs |
+| Memes | /memes | 12 memes |
+| Videos | /videos | 19 YouTube videos |
+| Photos | /photos | 30 stock photos |
+| Music | /music | 244 tracks from Google Drive |
+| Radio | /radio | Streaming player |
 | Live Stream | /live | Visual content + music playback |
+| Browse All | /browse | All content with filters |
 | Submit | /submit | User submissions |
 | Requests | /requests | Bounty system |
 | Account | /account | Dashboard with favorites |
@@ -32,9 +37,9 @@ Pizza content repository platform with GIFs, memes, videos, music, photos, and u
 |------|-------|--------|
 | Music | 244 | Google Drive sync |
 | GIFs | 63 | GIPHY (35) + Original uploads (28) |
-| Memes | 12 | Reddit r/pizza |
-| Videos | 19 | YouTube imports |
 | Photos | 30 | Pexels (15) + Pixabay (15) |
+| Videos | 19 | YouTube imports |
+| Memes | 12 | Reddit r/pizza |
 | **Total** | **368** | |
 
 ---
@@ -43,48 +48,59 @@ Pizza content repository platform with GIFs, memes, videos, music, photos, and u
 
 ### Features Added
 
-1. **LiveStreamMusic Component** (`src/components/live/LiveStreamMusic.tsx`)
+1. **Photo Content Type**
+   - Added 'photo' to content_type enum in database
+   - Created /photos page with grid layout
+   - Added Photos link to header navigation
+   - Imported 30 stock photos from Pexels and Pixabay
+
+2. **LiveStreamMusic Component** (`src/components/live/LiveStreamMusic.tsx`)
    - New component for playing music on the livestream page
    - Fetches music tracks from Supabase, shuffles, auto-plays
    - Handles track skipping on errors
    - Volume control support
 
-2. **Photo Content Type**
-   - Added 'photo' to content_type enum in database
-   - Updated all TypeScript types and Record<ContentType, ...> objects
-   - Imported 30 stock photos from Pexels and Pixabay
-
 3. **YouTube Iframe Support** (`src/components/live/ContentDisplay.tsx`)
    - Detects YouTube URLs and renders iframe instead of video element
    - Enables proper playback of YouTube embeds
 
-4. **Import Scripts Created**
-   - `scripts/import-reddit.mjs` - Reddit JSON API
-   - `scripts/import-youtube.mjs` - YouTube Data API
-   - `scripts/import-pexels.mjs` - Pexels API
-   - `scripts/import-pixabay.mjs` - Pixabay API
-   - `scripts/import-9gag.mjs` - 9GAG scraper
-   - `scripts/import-knowyourmeme.mjs` - KYM scraper
-
-5. **Build Fixes**
-   - Added `dynamic = 'force-dynamic'` to root layout
-   - Created server/client split for dashboard layout
+4. **Build Fixes**
+   - Added `dynamic = 'force-dynamic'` to root layout, dashboard layout, admin layout
+   - Created server/client split for dashboard layout (DashboardClient.tsx)
    - Removed incompatible Edge Function (supabase/functions/scheduled-import)
    - Fixed all Record<ContentType, ...> objects for 'photo' type
 
-### Files Modified
+5. **Browse Page Fix**
+   - Added 'photo' to ContentType union and filter buttons
+   - Browse page now shows all content types
+
+### Files Modified This Session
 
 - `src/app/layout.tsx` - Added dynamic export
 - `src/app/(dashboard)/layout.tsx` - Server component wrapper
-- `src/app/(dashboard)/DashboardClient.tsx` - Client component extracted
-- `src/app/admin/layout.tsx` - Added dynamic export
+- `src/app/(dashboard)/DashboardClient.tsx` - NEW: Client component extracted
+- `src/app/admin/layout.tsx` - NEW: Added dynamic export
+- `src/app/photos/page.tsx` - NEW: Photos gallery page
+- `src/app/browse/page.tsx` - Added 'photo' type to filters
+- `src/components/layout/Header.tsx` - Added Photos nav link
 - `src/components/live/ContentDisplay.tsx` - YouTube iframe + object-contain
 - `src/components/live/LiveStreamPlayer.tsx` - Integrated LiveStreamMusic
-- `src/components/live/LiveStreamMusic.tsx` - NEW
+- `src/components/live/LiveStreamMusic.tsx` - NEW: Music player component
 - `src/components/content/ContentCard.tsx` - Added 'photo' to typeColors
 - `src/components/submit/ContentPreview.tsx` - Added 'photo' to typeColors
 - `src/lib/upload.ts` - Added 'photo' type configs
 - `src/types/database.ts` - Added 'photo' to content_type enum
+
+---
+
+## Background Agents Running
+
+Three Playwright test agents are currently running:
+1. Browse page tester - Testing /browse functionality
+2. Live stream tester - Testing /live functionality
+3. Earlier agent (a355bfa) - Still running from previous task
+
+These will continue running after conversation reset.
 
 ---
 
@@ -182,9 +198,14 @@ All scripts require `SUPABASE_SERVICE_KEY` environment variable.
 | Resource | URL |
 |----------|-----|
 | Live Site | https://pizza-content.vercel.app |
+| GIFs | https://pizza-content.vercel.app/gifs |
+| Memes | https://pizza-content.vercel.app/memes |
+| Videos | https://pizza-content.vercel.app/videos |
+| Photos | https://pizza-content.vercel.app/photos |
 | Music | https://pizza-content.vercel.app/music |
 | Radio | https://pizza-content.vercel.app/radio |
 | Live Stream | https://pizza-content.vercel.app/live |
+| Browse All | https://pizza-content.vercel.app/browse |
 | GitHub | https://github.com/snackman/pizza-content |
 | Supabase | https://supabase.com/dashboard/project/hecsxlqeviirichoohkl |
 | Vercel | https://vercel.com/pizza-dao/pizza-content |
@@ -215,8 +236,8 @@ npm run dev
 # Sync music from Google Drive
 npm run sync-music
 
-# Run tests
-npm test
+# Run Playwright tests
+npx playwright test
 
 # Build
 npm run build
@@ -228,20 +249,21 @@ npm run build
 
 1. **Middleware deprecation warning** - Next.js 16 shows warning about middleware->proxy convention. Not blocking.
 
-2. **Music playback on Live Stream** - Requires user interaction first (browser autoplay policy). The LiveStreamMusic component is integrated but users need to click/interact before audio plays.
+2. **Music playback on Live Stream** - Requires user interaction first (browser autoplay policy). Users need to click "Enable Audio" before music plays.
 
-3. **Reddit images** - All Reddit content now has real URLs from the Reddit JSON API.
+3. **YouTube playback** - YouTube videos use iframes for proper embed support.
 
-4. **YouTube playback** - YouTube videos use iframes for proper embed support.
+4. **Images** - Display using object-contain (fit to frame, not cover).
 
 ---
 
 ## Session Summary (2026-02-01)
 
-1. Added photo content type (Pexels + Pixabay imports)
-2. Created LiveStreamMusic component for live page
-3. Fixed YouTube video playback with iframe support
-4. Changed image display from object-cover to object-contain
-5. Fixed build errors (dynamic rendering for Supabase client pages)
-6. Deleted incompatible Edge Function
-7. Build passes successfully
+1. Added photo content type with /photos page
+2. Fixed build errors (dynamic rendering for Supabase client pages)
+3. Fixed browse page missing 'photo' in ContentType
+4. Added Photos to header navigation
+5. Created LiveStreamMusic component for live page
+6. Fixed YouTube video playback with iframe support
+7. Launched 3 Playwright test agents (browse, live stream)
+8. All 368 content items displaying correctly
