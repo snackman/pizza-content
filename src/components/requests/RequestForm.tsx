@@ -23,6 +23,8 @@ const contentTypes: { value: ContentType; label: string }[] = [
   { value: 'meme', label: 'Meme' },
   { value: 'video', label: 'Video' },
   { value: 'music', label: 'Music' },
+  { value: 'photo', label: 'Photo' },
+  { value: 'art', label: 'Art' },
 ]
 
 export function RequestForm({ userId }: RequestFormProps) {

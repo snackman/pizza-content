@@ -8,6 +8,7 @@ export const FILE_SIZE_LIMITS: Record<ContentType, number> = {
   video: 50 * 1024 * 1024, // 50MB
   music: 20 * 1024 * 1024, // 20MB
   photo: 10 * 1024 * 1024, // 10MB
+  art: 15 * 1024 * 1024, // 15MB
 }
 
 // Allowed file extensions by type
@@ -17,6 +18,7 @@ export const ALLOWED_EXTENSIONS: Record<ContentType, string[]> = {
   video: ['.mp4', '.webm'],
   music: ['.mp3', '.wav', '.ogg', '.m4a'],
   photo: ['.jpg', '.jpeg', '.png', '.webp'],
+  art: ['.jpg', '.jpeg', '.png', '.webp', '.svg'],
 }
 
 // Allowed MIME types by content type
@@ -26,6 +28,7 @@ export const ALLOWED_MIME_TYPES: Record<ContentType, string[]> = {
   video: ['video/mp4', 'video/webm'],
   music: ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp4', 'audio/x-m4a'],
   photo: ['image/jpeg', 'image/png', 'image/webp'],
+  art: ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
 }
 
 // External URL patterns
@@ -105,7 +108,7 @@ export async function uploadToStorage(
   // Generate unique filename
   const uuid = crypto.randomUUID()
   const ext = file.name.split('.').pop()?.toLowerCase() || ''
-  const folder = contentType === 'meme' ? 'memes' : `${contentType}s`
+  const folder = contentType === 'meme' ? 'memes' : contentType === 'art' ? 'art' : `${contentType}s`
   const path = `${folder}/${uuid}.${ext}`
 
   try {

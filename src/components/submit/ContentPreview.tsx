@@ -108,7 +108,7 @@ export function ContentPreview({
       return (
         <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100 text-gray-500">
           <div className="text-4xl mb-2">
-            {contentType === 'video' ? '🎬' : contentType === 'gif' ? '🎞' : contentType === 'music' ? '🎵' : '🖼'}
+            {contentType === 'video' ? '🎬' : contentType === 'gif' ? '🎞' : contentType === 'music' ? '🎵' : contentType === 'photo' ? '📸' : contentType === 'art' ? '🎨' : '🖼'}
           </div>
           <p className="text-sm">{platformIcons[platform || 'other']} Content</p>
           <p className="text-xs text-gray-400 mt-1">Preview available after submission</p>
@@ -119,7 +119,7 @@ export function ContentPreview({
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100 text-gray-400">
         <div className="text-4xl mb-2">
-          {contentType === 'video' ? '🎬' : contentType === 'gif' ? '🎞' : contentType === 'music' ? '🎵' : '🖼'}
+          {contentType === 'video' ? '🎬' : contentType === 'gif' ? '🎞' : contentType === 'music' ? '🎵' : contentType === 'photo' ? '📸' : contentType === 'art' ? '🎨' : '🖼'}
         </div>
         <p className="text-sm">No content selected</p>
       </div>
@@ -132,6 +132,7 @@ export function ContentPreview({
     video: 'bg-red-500',
     music: 'bg-purple-500',
     photo: 'bg-blue-500',
+    art: 'bg-pink-500',
   }
 
   if (!title && !file && !url) {

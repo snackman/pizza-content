@@ -16,6 +16,7 @@ const typeColors: Record<string, string> = {
   video: 'bg-red-500',
   music: 'bg-green-500',
   photo: 'bg-blue-500',
+  art: 'bg-pink-500',
 }
 
 export function ContentCard({ item, showType = false, showFavorite = true }: ContentCardProps) {
