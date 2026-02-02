@@ -1,269 +1,116 @@
-# Pizza Content Platform - Handoff Document
+# Pizza Content - Session Handoff
 
-## Project Overview
-Pizza content repository platform with GIFs, memes, videos, music, photos, and user submissions.
+## Session Summary (Feb 2, 2026)
 
-- **Live Site:** https://pizza-content.vercel.app
-- **GitHub:** https://github.com/snackman/pizza-content
-- **Supabase Project:** hecsxlqeviirichoohkl
-- **Task Sheet:** https://docs.google.com/spreadsheets/d/13WBouU-AFOVad2oJFd7jIhePhTSMo_i04tlzUu_gRHE
+### Content Database Status
+- **Total content**: 1,019 items
+- **Visible**: 1,019 (all approved)
+- **Flagged**: 0
 
----
+### Content by Type
+| Type | Count |
+|------|-------|
+| GIFs | 344 |
+| Photos | 260 |
+| Music | 244 |
+| Videos | 100 |
+| Memes | 46 |
+| Art | 23 |
 
-## Current Status
+### API Status
+| API | Status | Notes |
+|-----|--------|-------|
+| Giphy | ✅ Working | GIPHY_API_KEY configured |
+| Pexels | ✅ Working | PEXELS_API_KEY configured |
+| Pixabay | ✅ Working | PIXABAY_API_KEY configured |
+| Unsplash | ✅ Working | UNSPLASH_ACCESS_KEY configured |
+| YouTube | ✅ Working | YOUTUBE_API_KEY configured |
+| DeviantArt | ✅ Working | DEVIANTART_CLIENT_ID/SECRET configured |
+| Tumblr | ✅ Working | TUMBLR_API_KEY configured |
+| TikTok | ❌ Down | RapidAPI returning 503 errors |
+| Reddit | ✅ Working | No API key needed (public JSON API) |
+| Imgur | ⏳ Needs setup | Need IMGUR_CLIENT_ID |
+| Google Drive | ✅ Working | Music sync working |
 
-### All Features Deployed
+### Features Added This Session
 
-| Feature | URL | Status |
-|---------|-----|--------|
-| GIFs | /gifs | 63 GIFs |
-| Memes | /memes | 12 memes |
-| Videos | /videos | 19 YouTube videos |
-| Photos | /photos | 30 stock photos |
-| Music | /music | 244 tracks from Google Drive |
-| Radio | /radio | Streaming player |
-| Live Stream | /live | Visual content + music playback |
-| Browse All | /browse | All content with filters |
-| Submit | /submit | User submissions |
-| Requests | /requests | Bounty system |
-| Account | /account | Dashboard with favorites |
-| Admin Imports | /admin/imports | Viral content import |
+1. **Content Flagging System**
+   - Added `flagged_not_pizza` and `flagged_broken` status values
+   - Flag button on content cards (hover to see, click for dropdown)
+   - API endpoint: `/api/content/flag`
+   - Flagged content hidden from browse page
 
----
+2. **Admin Dashboard** (`/admin`)
+   - Overview cards (total, visible, flagged content)
+   - API status list with docs links
+   - Content breakdown by type and platform
+   - Recent import logs
+   - Import command reference
 
-## Database Content Summary
+3. **Filter Label Fix**
+   - "Music" and "Art" now display correctly (not "Musics"/"Arts")
 
-| Type | Count | Source |
-|------|-------|--------|
-| Music | 244 | Google Drive sync |
-| GIFs | 63 | GIPHY (35) + Original uploads (28) |
-| Photos | 30 | Pexels (15) + Pixabay (15) |
-| Videos | 19 | YouTube imports |
-| Memes | 12 | Reddit r/pizza |
-| **Total** | **368** | |
+### Known Issues
 
----
+1. **Browse page not loading content**
+   - Agent dispatched to fix using Playwright
+   - All 1,019 items have status 'approved' in database
+   - Query should work but content not displaying on frontend
 
-## Recent Session Changes (2026-02-01)
+2. **TikTok API down**
+   - RapidAPI TikTok service returning 503
+   - Wait for service to recover or find alternative provider
 
-### Features Added
+### Pending Work
 
-1. **Photo Content Type**
-   - Added 'photo' to content_type enum in database
-   - Created /photos page with grid layout
-   - Added Photos link to header navigation
-   - Imported 30 stock photos from Pexels and Pixabay
+1. **Games category** - Planning agent dispatched, check `plans/games-content-category.md`
+2. **Browse page fix** - Agent working on it
+3. **Imgur setup** - Need to register app at https://api.imgur.com/oauth2/addclient
 
-2. **LiveStreamMusic Component** (`src/components/live/LiveStreamMusic.tsx`)
-   - New component for playing music on the livestream page
-   - Fetches music tracks from Supabase, shuffles, auto-plays
-   - Handles track skipping on errors
-   - Volume control support
+### Environment Variables (.env.local)
+All API keys are configured in `.env.local`:
+- GIPHY_API_KEY
+- PEXELS_API_KEY
+- PIXABAY_API_KEY
+- YOUTUBE_API_KEY
+- UNSPLASH_ACCESS_KEY
+- RAPIDAPI_KEY (for TikTok)
+- DEVIANTART_CLIENT_ID
+- DEVIANTART_CLIENT_SECRET
+- TUMBLR_API_KEY
+- SUPABASE_SERVICE_KEY
+- GOOGLE_SERVICE_ACCOUNT_JSON
 
-3. **YouTube Iframe Support** (`src/components/live/ContentDisplay.tsx`)
-   - Detects YouTube URLs and renders iframe instead of video element
-   - Enables proper playback of YouTube embeds
-
-4. **Build Fixes**
-   - Added `dynamic = 'force-dynamic'` to root layout, dashboard layout, admin layout
-   - Created server/client split for dashboard layout (DashboardClient.tsx)
-   - Removed incompatible Edge Function (supabase/functions/scheduled-import)
-   - Fixed all Record<ContentType, ...> objects for 'photo' type
-
-5. **Browse Page Fix**
-   - Added 'photo' to ContentType union and filter buttons
-   - Browse page now shows all content types
-
-### Files Modified This Session
-
-- `src/app/layout.tsx` - Added dynamic export
-- `src/app/(dashboard)/layout.tsx` - Server component wrapper
-- `src/app/(dashboard)/DashboardClient.tsx` - NEW: Client component extracted
-- `src/app/admin/layout.tsx` - NEW: Added dynamic export
-- `src/app/photos/page.tsx` - NEW: Photos gallery page
-- `src/app/browse/page.tsx` - Added 'photo' type to filters
-- `src/components/layout/Header.tsx` - Added Photos nav link
-- `src/components/live/ContentDisplay.tsx` - YouTube iframe + object-contain
-- `src/components/live/LiveStreamPlayer.tsx` - Integrated LiveStreamMusic
-- `src/components/live/LiveStreamMusic.tsx` - NEW: Music player component
-- `src/components/content/ContentCard.tsx` - Added 'photo' to typeColors
-- `src/components/submit/ContentPreview.tsx` - Added 'photo' to typeColors
-- `src/lib/upload.ts` - Added 'photo' type configs
-- `src/types/database.ts` - Added 'photo' to content_type enum
-
----
-
-## Background Agents Running
-
-Three Playwright test agents are currently running:
-1. Browse page tester - Testing /browse functionality
-2. Live stream tester - Testing /live functionality
-3. Earlier agent (a355bfa) - Still running from previous task
-
-These will continue running after conversation reset.
-
----
-
-## Google Drive Music Integration
-
-### Setup Complete
-- **Folder:** https://drive.google.com/drive/folders/1owejIWtX7obut3cX6tOo7EEdVssp6AcE
-- **Service Account:** pizza-content@pizza-content.iam.gserviceaccount.com
-- **Tracks Synced:** 244
-
-### How It Works
-1. Audio files live in Google Drive folder
-2. `npm run sync-music` creates database records with proxy URLs
-3. `/api/music/gdrive/[fileId]` streams audio from Google Drive
-4. No files stored in Supabase - streamed directly
-
-### To Add New Music
+### Import Commands
 ```bash
+npm run import-giphy
+npm run import-pexels
+npm run import-pixabay
+npm run import-unsplash
+npm run import-youtube
+npm run import-deviantart
+npm run import-tumblr
+npm run import-reddit
+npm run import-tiktok  # Currently broken (503)
 npm run sync-music
 ```
 
-### Environment Variable (in Vercel)
-- `GOOGLE_SERVICE_ACCOUNT_JSON` - Full service account JSON
+### Key Files
+- `/admin` - Admin dashboard
+- `/browse` - Content browser (needs fix)
+- `/art` - Art gallery page
+- `/music` - Music player page
+- `src/components/content/ContentCard.tsx` - Card with flag button
+- `src/app/api/content/flag/route.ts` - Flag API endpoint
+- `scripts/` - All import scripts
 
----
+### Database
+- **Project ID**: hecsxlqeviirichoohkl
+- **MCP**: supabase-pizzacontent
+- Content status enum: pending, approved, rejected, featured, flagged_not_pizza, flagged_broken
 
-## MCP Connections
-
-### Supabase
-- **MCP:** `supabase-pizzacontent`
-- **Tools:** `mcp__supabase-pizzacontent__execute_sql`, `apply_migration`, `list_tables`, etc.
-
-### Sheets (Task Management)
-- **MCP:** `sheets-claude`
-- **Tools:** `mcp__sheets-claude__get_project_tasks`, `update_task_status`, etc.
-
----
-
-## Database Tables
-
-| Table | Purpose |
-|-------|---------|
-| profiles | User accounts with pizzeria fields |
-| content | GIFs, memes, videos, music, photos |
-| content_requests | Bounty requests |
-| request_claims | Users claiming requests |
-| favorites | User favorites |
-| view_history | User view history |
-| import_sources | Viral content import sources |
-| import_logs | Import history |
-
-All migrations applied.
-
----
-
-## Import Scripts
-
-Available import scripts in `package.json`:
-
-```bash
-# Content imports (require API keys)
-npm run import-giphy    # GIPHY_API_KEY
-npm run import-reddit   # Public API (no key needed)
-npm run import-tenor    # TENOR_API_KEY
-npm run import-imgur    # IMGUR_CLIENT_ID
-npm run import-youtube  # YOUTUBE_API_KEY
-npm run import-pexels   # PEXELS_API_KEY
-npm run import-pixabay  # PIXABAY_API_KEY
-npm run import-9gag     # Web scraper (no key)
-npm run import-kym      # Web scraper (no key)
-
-# Music sync
-npm run sync-music      # Google Drive sync
-```
-
-All scripts require `SUPABASE_SERVICE_KEY` environment variable.
-
----
-
-## Remaining Tasks (from sheet)
-
-| Task ID | Description | Priority |
-|---------|-------------|----------|
-| olive-77231 | No email auth needed | - |
-| pineapple-62044 | Pizza Recipes repository | - |
-| burrata-12271 | Rating/Scoring system | - |
-| artichoke-74538 | Content metadata | - |
-| woodfired-83060 | Content Moderation Queue | Mid |
-| funghi-66576 | Pepperoni Integration (tokens) | Low |
-
----
-
-## Key URLs
-
-| Resource | URL |
-|----------|-----|
-| Live Site | https://pizza-content.vercel.app |
-| GIFs | https://pizza-content.vercel.app/gifs |
-| Memes | https://pizza-content.vercel.app/memes |
-| Videos | https://pizza-content.vercel.app/videos |
-| Photos | https://pizza-content.vercel.app/photos |
-| Music | https://pizza-content.vercel.app/music |
-| Radio | https://pizza-content.vercel.app/radio |
-| Live Stream | https://pizza-content.vercel.app/live |
-| Browse All | https://pizza-content.vercel.app/browse |
-| GitHub | https://github.com/snackman/pizza-content |
-| Supabase | https://supabase.com/dashboard/project/hecsxlqeviirichoohkl |
-| Vercel | https://vercel.com/pizza-dao/pizza-content |
-| Task Sheet | https://docs.google.com/spreadsheets/d/13WBouU-AFOVad2oJFd7jIhePhTSMo_i04tlzUu_gRHE |
-| Google Drive Music | https://drive.google.com/drive/folders/1owejIWtX7obut3cX6tOo7EEdVssp6AcE |
-
----
-
-## Tech Stack
-- Next.js 16 (App Router, Turbopack)
-- Supabase (Postgres, Auth, Storage)
-- Google Drive API (music streaming)
-- Tailwind CSS
-- Vercel (deployment)
-- Playwright (testing)
-
----
-
-## Local Development
-
-```bash
-# Install dependencies
-npm install
-
-# Run dev server
-npm run dev
-
-# Sync music from Google Drive
-npm run sync-music
-
-# Run Playwright tests
-npx playwright test
-
-# Build
-npm run build
-```
-
----
-
-## Known Issues / Notes
-
-1. **Middleware deprecation warning** - Next.js 16 shows warning about middleware->proxy convention. Not blocking.
-
-2. **Music playback on Live Stream** - Requires user interaction first (browser autoplay policy). Users need to click "Enable Audio" before music plays.
-
-3. **YouTube playback** - YouTube videos use iframes for proper embed support.
-
-4. **Images** - Display using object-contain (fit to frame, not cover).
-
----
-
-## Session Summary (2026-02-01)
-
-1. Added photo content type with /photos page
-2. Fixed build errors (dynamic rendering for Supabase client pages)
-3. Fixed browse page missing 'photo' in ContentType
-4. Added Photos to header navigation
-5. Created LiveStreamMusic component for live page
-6. Fixed YouTube video playback with iframe support
-7. Launched 3 Playwright test agents (browse, live stream)
-8. All 368 content items displaying correctly
+### Next Steps
+1. Check if browse page fix agent completed successfully
+2. Review games category plan when ready
+3. Set up Imgur API if desired
+4. Monitor TikTok API for recovery
