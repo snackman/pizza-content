@@ -19,6 +19,9 @@ export function ContentDisplay({
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [displayedContent, setDisplayedContent] = useState<Content | null>(null)
   const [imageLoaded, setImageLoaded] = useState(false)
+  const [upvotes, setUpvotes] = useState(0)
+  const [downvotes, setDownvotes] = useState(0)
+  const [isVoting, setIsVoting] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
 
   // Handle content transitions
@@ -29,6 +32,9 @@ export function ContentDisplay({
 
       const timeout = setTimeout(() => {
         setDisplayedContent(content)
+        // Initialize vote counts from content
+        setUpvotes(content?.upvotes ?? 0)
+        setDownvotes(content?.downvotes ?? 0)
         setTimeout(() => {
           setIsTransitioning(false)
         }, 50)
@@ -50,6 +56,50 @@ export function ContentDisplay({
       }
     }
   }, [isPlaying, displayedContent])
+
+  const handleVote = async (vote: 'up' | 'down') => {
+    if (!displayedContent || isVoting) return
+
+    setIsVoting(true)
+
+    // Optimistic update
+    if (vote === 'up') {
+      setUpvotes(prev => prev + 1)
+    } else {
+      setDownvotes(prev => prev + 1)
+    }
+
+    try {
+      const response = await fetch('/api/content/vote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contentId: displayedContent.id, vote }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setUpvotes(data.upvotes)
+        setDownvotes(data.downvotes)
+      } else {
+        // Revert optimistic update on error
+        if (vote === 'up') {
+          setUpvotes(prev => prev - 1)
+        } else {
+          setDownvotes(prev => prev - 1)
+        }
+      }
+    } catch (error) {
+      // Revert optimistic update on error
+      if (vote === 'up') {
+        setUpvotes(prev => prev - 1)
+      } else {
+        setDownvotes(prev => prev - 1)
+      }
+      console.error('Vote error:', error)
+    } finally {
+      setIsVoting(false)
+    }
+  }
 
   if (!displayedContent) {
     return (
@@ -109,21 +159,56 @@ export function ContentDisplay({
         </>
       )}
 
-      {/* Link Button - always visible in corner */}
-      {(displayedContent.source_url || displayedContent.url) && (
-        <a
-          href={displayedContent.source_url || displayedContent.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="absolute top-4 right-4 p-3 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors z-10"
-          title={`View on ${displayedContent.source_platform || 'source'}`}
-          onClick={(e) => e.stopPropagation()}
+      {/* Vote Buttons and Link Button - always visible in corner */}
+      <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+        {/* Upvote Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            handleVote('up')
+          }}
+          disabled={isVoting}
+          className="flex items-center gap-1 p-2 bg-black/50 hover:bg-green-600/70 rounded-full text-white transition-colors disabled:opacity-50"
+          title="Upvote"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
           </svg>
-        </a>
-      )}
+          <span className="text-sm font-medium min-w-[1.5rem] text-center">{upvotes}</span>
+        </button>
+
+        {/* Downvote Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            handleVote('down')
+          }}
+          disabled={isVoting}
+          className="flex items-center gap-1 p-2 bg-black/50 hover:bg-red-600/70 rounded-full text-white transition-colors disabled:opacity-50"
+          title="Downvote"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+          </svg>
+          <span className="text-sm font-medium min-w-[1.5rem] text-center">{downvotes}</span>
+        </button>
+
+        {/* Link Button */}
+        {(displayedContent.source_url || displayedContent.url) && (
+          <a
+            href={displayedContent.source_url || displayedContent.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-3 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+            title={`View on ${displayedContent.source_platform || 'source'}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        )}
+      </div>
 
       {/* Content Info Overlay */}
       {showInfo && (

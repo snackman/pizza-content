@@ -20,6 +20,7 @@ export type Database = {
           artist: string | null
           created_at: string | null
           description: string | null
+          downvotes: number | null
           duration_seconds: number | null
           fulfills_request_id: string | null
           id: string
@@ -33,6 +34,7 @@ export type Database = {
           title: string
           type: Database["public"]["Enums"]["content_type"]
           updated_at: string | null
+          upvotes: number | null
           url: string
           view_count: number | null
         }
@@ -41,6 +43,7 @@ export type Database = {
           artist?: string | null
           created_at?: string | null
           description?: string | null
+          downvotes?: number | null
           duration_seconds?: number | null
           fulfills_request_id?: string | null
           id?: string
@@ -54,6 +57,7 @@ export type Database = {
           title: string
           type: Database["public"]["Enums"]["content_type"]
           updated_at?: string | null
+          upvotes?: number | null
           url: string
           view_count?: number | null
         }
@@ -62,6 +66,7 @@ export type Database = {
           artist?: string | null
           created_at?: string | null
           description?: string | null
+          downvotes?: number | null
           duration_seconds?: number | null
           fulfills_request_id?: string | null
           id?: string
@@ -75,6 +80,7 @@ export type Database = {
           title?: string
           type?: Database["public"]["Enums"]["content_type"]
           updated_at?: string | null
+          upvotes?: number | null
           url?: string
           view_count?: number | null
         }
