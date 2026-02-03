@@ -133,6 +133,7 @@ export function ContentPreview({
     music: 'bg-purple-500',
     photo: 'bg-blue-500',
     art: 'bg-pink-500',
+    game: 'bg-indigo-500',
   }
 
   if (!title && !file && !url) {
