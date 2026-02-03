@@ -15,8 +15,9 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
 
     // Use the vote_all_star RPC function
+    // Cast to any since TypeScript types may not include this function yet
     const { data, error } = await supabase
-      .rpc('vote_all_star', {
+      .rpc('vote_all_star' as any, {
         p_all_star_id: allStarId,
         p_vote_type: vote,
       })
@@ -30,9 +31,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const result = data as { upvotes: number; downvotes: number } | null
     return NextResponse.json({
-      upvotes: data?.upvotes ?? 0,
-      downvotes: data?.downvotes ?? 0,
+      upvotes: result?.upvotes ?? 0,
+      downvotes: result?.downvotes ?? 0,
     })
   } catch (error) {
     console.error('Vote API error:', error)

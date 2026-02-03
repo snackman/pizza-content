@@ -5,8 +5,9 @@ export async function GET() {
   try {
     const supabase = await createClient()
 
+    // Cast to any since TypeScript types may not include this table yet
     const { data, error } = await supabase
-      .from('pizza_all_stars')
+      .from('pizza_all_stars' as any)
       .select('*')
       .eq('status', 'approved')
       .order('upvotes', { ascending: false })

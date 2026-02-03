@@ -40,8 +40,9 @@ export async function POST(request: NextRequest) {
       downvotes: 0,
     }
 
+    // Cast to any since TypeScript types may not include this table yet
     const { data, error } = await supabase
-      .from('pizza_all_stars')
+      .from('pizza_all_stars' as any)
       .insert(insertData)
       .select()
       .single()
