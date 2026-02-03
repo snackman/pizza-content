@@ -36,6 +36,13 @@ const categories = [
     emoji: '🎨',
     color: 'from-pink-400 to-purple-600',
   },
+  {
+    title: 'Games',
+    description: 'Pizza-themed games and gaming content',
+    href: '/games',
+    emoji: '🎮',
+    color: 'from-indigo-400 to-purple-600',
+  },
 ]
 
 export default function HomePage() {

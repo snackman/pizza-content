@@ -440,7 +440,7 @@ export type Database = {
     }
     Enums: {
       content_status: "pending" | "approved" | "rejected" | "featured" | "flagged_not_pizza" | "flagged_broken"
-      content_type: "gif" | "meme" | "video" | "music" | "photo" | "art"
+      content_type: "gif" | "meme" | "video" | "music" | "photo" | "art" | "game"
       request_status: "open" | "in_progress" | "fulfilled" | "closed"
     }
     CompositeTypes: {

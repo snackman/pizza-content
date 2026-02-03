@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Content } from '@/types/database'
 import { ContentCard } from '@/components/content/ContentCard'
 
-type ContentType = 'all' | 'gif' | 'meme' | 'video' | 'music' | 'photo' | 'art'
+type ContentType = 'all' | 'gif' | 'meme' | 'video' | 'music' | 'photo' | 'art' | 'game'
 
 const ITEMS_PER_PAGE = 24
 
@@ -115,7 +115,7 @@ export default function BrowsePage() {
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           {/* Type Filter */}
           <div className="flex flex-wrap gap-2">
-            {(['all', 'gif', 'meme', 'video', 'music', 'photo', 'art'] as ContentType[]).map((type) => (
+            {(['all', 'gif', 'meme', 'video', 'music', 'photo', 'art', 'game'] as ContentType[]).map((type) => (
               <button
                 key={type}
                 onClick={() => setFilter(type)}
@@ -125,7 +125,7 @@ export default function BrowsePage() {
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                {type === 'all' ? 'All' : type === 'music' || type === 'art' ? type.charAt(0).toUpperCase() + type.slice(1) : type.charAt(0).toUpperCase() + type.slice(1) + 's'}
+                {type === 'all' ? 'All' : type === 'music' || type === 'art' ? type.charAt(0).toUpperCase() + type.slice(1) : type === 'game' ? 'Games' : type.charAt(0).toUpperCase() + type.slice(1) + 's'}
               </button>
             ))}
           </div>
