@@ -115,6 +115,22 @@ export function ContentDisplay({
   const isVideo = displayedContent.type === 'video'
   const isYouTube = displayedContent.url?.includes('youtube.com') || displayedContent.url?.includes('youtu.be')
 
+  // Convert YouTube watch URLs to embed URLs
+  const getYouTubeEmbedUrl = (url: string) => {
+    // Already an embed URL
+    if (url.includes('/embed/')) return url
+
+    // Extract video ID from various YouTube URL formats
+    let videoId = ''
+    if (url.includes('youtu.be/')) {
+      videoId = url.split('youtu.be/')[1]?.split(/[?&#]/)[0] || ''
+    } else if (url.includes('v=')) {
+      videoId = url.split('v=')[1]?.split(/[&#]/)[0] || ''
+    }
+
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : url
+  }
+
   return (
     <div
       className={`relative w-full h-full flex items-center justify-center bg-black transition-opacity duration-300 ${
@@ -123,7 +139,7 @@ export function ContentDisplay({
     >
       {isVideo && isYouTube ? (
         <iframe
-          src={`${displayedContent.url}?autoplay=1&mute=1`}
+          src={`${getYouTubeEmbedUrl(displayedContent.url)}?autoplay=1&mute=1`}
           className="w-full h-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
@@ -159,8 +175,23 @@ export function ContentDisplay({
         </>
       )}
 
-      {/* Vote Buttons and Link Button - always visible in corner */}
+      {/* Flag, Vote Buttons and Link Button - always visible in corner */}
       <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+        {/* Flag Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            // TODO: Implement flag functionality
+            console.log('Flag content:', displayedContent.id)
+          }}
+          className="p-2 bg-black/50 hover:bg-yellow-600/70 rounded-full text-white transition-colors"
+          title="Flag content"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+          </svg>
+        </button>
+
         {/* Upvote Button */}
         <button
           onClick={(e) => {

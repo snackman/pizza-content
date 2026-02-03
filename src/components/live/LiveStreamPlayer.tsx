@@ -12,7 +12,6 @@ interface LiveStreamPlayerProps {
 
 export function LiveStreamPlayer({ initialSettings }: LiveStreamPlayerProps) {
   const [controlsVisible, setControlsVisible] = useState(true)
-  const [audioEnabled, setAudioEnabled] = useState(false)
   const hideControlsTimeout = useRef<NodeJS.Timeout | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const touchStartX = useRef<number | null>(null)
@@ -179,11 +178,6 @@ export function LiveStreamPlayer({ initialSettings }: LiveStreamPlayerProps) {
     }
   }, [isPlaying])
 
-  // Handle audio prompt
-  const handleEnableAudio = useCallback(() => {
-    setAudioEnabled(true)
-    // Audio will be handled by the music integration later
-  }, [])
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -235,32 +229,9 @@ export function LiveStreamPlayer({ initialSettings }: LiveStreamPlayerProps) {
 
       {/* Music Player */}
       <LiveStreamMusic
-        enabled={audioEnabled && settings.musicEnabled}
+        enabled={settings.musicEnabled}
         volume={settings.musicVolume}
       />
-
-      {/* Audio Enable Prompt (shown initially) */}
-      {!audioEnabled && settings.musicEnabled && (
-        <button
-          onClick={handleEnableAudio}
-          className="absolute top-4 right-4 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors z-20 flex items-center gap-2"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-            />
-          </svg>
-          Enable Audio
-        </button>
-      )}
 
       {/* Playing indicator (when controls hidden) */}
       {!controlsVisible && isPlaying && (
