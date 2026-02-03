@@ -1,98 +1,125 @@
 # Pizza Sauce - Session Handoff
 
-## Session Summary (Feb 3, 2026)
+## Session Summary (Feb 3, 2026 - Evening)
 
 ### Completed This Session
 
-1. **Domain pizzasauce.xyz** - Live and working
-   - Added to Vercel project (pizza-dao team)
-   - Configured Namecheap DNS (A record → 76.76.21.21, CNAME www → cname.vercel-dns.com)
-   - Script: `namecheap/setup_pizzasauce_dns.py`
+1. **Removed "Enable Audio" Button**
+   - Audio now controlled via mute button (M key) instead of separate enable button
+   - Simplified LiveStreamPlayer.tsx
 
-2. **Fixed Voting Bug** - Votes now persist on /live page
-   - Root cause: RLS policies blocked anonymous updates
-   - Fix: Created `vote_content(p_content_id, p_vote_type)` database function with SECURITY DEFINER
-   - Updated API at `src/app/api/content/vote/route.ts` to use `supabase.rpc()`
-   - Migration applied: `add_vote_function`
+2. **Fixed YouTube Embedding**
+   - YouTube videos were failing with X-Frame-Options error
+   - Added `getYouTubeEmbedUrl()` to convert watch URLs to embed URLs
+   - Now properly embeds: `youtube.com/watch?v=xxx` → `youtube.com/embed/xxx`
 
-3. **Rebranded to "Pizza Sauce"**
-   - Updated all user-facing text from "Pizza Content" to "Pizza Sauce"
-   - Files: Header, layout, home page, login/register pages
+3. **Added Flag Button with Visual Feedback**
+   - Flag button added to left of vote buttons on /live page
+   - Immediately highlights yellow with glow when clicked
+   - Shows "Flagged!" message
+   - Created `flag_content(p_content_id)` RPC function in database
+   - API at `src/app/api/content/flag/route.ts`
 
-4. **Content Cleanup**
-   - Deleted 114 broken Pixabay items (expired signed URLs)
-   - Deleted 6 non-pizza items (chicken sandwich, fruit salad, burger, etc.)
+4. **Source Badge in Upper Left**
+   - Replaced "Playing" indicator with source name + link button
+   - Shows platform name (reddit, giphy, tenor, etc.)
+   - Clickable link to original source
 
-5. **Games Import System** - PR #7 merged
-   - Created 3 import scripts:
-     - `scripts/import-games-rawg.mjs` - RAWG.io API (needs RAWG_API_KEY)
-     - `scripts/import-games-youtube.mjs` - YouTube gaming videos (needs YOUTUBE_API_KEY)
-     - `scripts/import-games-manual.mjs` - Curated list (no API key needed)
-   - Imported 8 curated pizza games via MCP
+5. **Tagged & Hidden Chain Pizza Content**
+   - Dominos: 29 items tagged and rejected
+   - Papa John's: 16 items tagged and rejected
+   - Pizza Hut: 18 items tagged and rejected
+   - Little Caesar's: 4 items tagged and rejected
+   - Total: 67 chain pizza items hidden from site
 
-6. **Content Import via MCP**
-   - Imported 10 photos/memes from Reddit (r/pizza, r/pizzacrimes)
-   - Imported 9 GIFs from Tenor
-   - No API keys needed - used MCP's service-level access
+6. **Content Import**
+   - Imported ~80 new items from Reddit (r/pizza, r/pizzacrimes, r/FoodPorn, r/shittyfoodporn)
+   - Imported ~30 new GIFs from Tenor
+   - Background agent still importing more content
 
-### Content Database Status (911 items)
+7. **New Import Script**
+   - Created `scripts/import-archive.mjs` for Archive.org (public domain content, no API key)
+
+### Content Database Status (997 items total, 933 approved)
 
 | Type | Count |
 |------|-------|
-| GIFs | 353 |
-| Music | 244 |
-| Photos | 132 |
-| Videos | 100 |
-| Memes | 51 |
-| Art | 23 |
+| GIFs | 327 |
+| Music | 243 |
+| Photos | 168 |
+| Videos | 92 |
+| Memes | 73 |
+| Art | 22 |
 | Games | 8 |
 
 ### Content by Source
 
 | Source | Count |
 |--------|-------|
-| Giphy | 296 |
-| Google Drive | 244 |
-| YouTube | 100 |
-| Pexels | 73 |
+| Giphy | 247 |
+| Google Drive | 243 |
+| Reddit | 104 |
+| YouTube | 92 |
+| Pexels | 72 |
 | Unsplash | 52 |
-| Reddit | 44 |
-| Tumblr | 27 |
-| DeviantArt | 20 |
+| Tenor | 33 |
+| Tumblr | 26 |
+| DeviantArt | 19 |
 | 9gag | 10 |
-| Tenor | 9 |
-| Steam | 8 |
+| Steam | 6 |
 
 ### API Status
 
 | API | Status | Notes |
 |-----|--------|-------|
-| Giphy | Working | GIPHY_API_KEY needed for script |
-| Pexels | Working | PEXELS_API_KEY needed for script |
-| Unsplash | Working | UNSPLASH_ACCESS_KEY needed for script |
-| YouTube | Working | YOUTUBE_API_KEY needed for script |
-| DeviantArt | Working | DEVIANTART_CLIENT_ID/SECRET needed |
-| Tumblr | Working | TUMBLR_API_KEY needed |
 | Reddit | Working | No API key needed (public JSON) |
-| Tenor | Working | Public API with default key |
+| Tenor | Flaky | Public API sometimes slow/fails |
+| Giphy | Working | GIPHY_API_KEY needed for script |
+| Pexels | Working | PEXELS_API_KEY needed |
+| Unsplash | Working | UNSPLASH_ACCESS_KEY needed |
+| YouTube | Working | YOUTUBE_API_KEY needed |
+| Archive.org | Working | No API key needed |
 | RAWG.io | Working | RAWG_API_KEY needed (free) |
 | TikTok | Down | RapidAPI returning 503 errors |
 | Imgur | Broken | Registration closed |
 | Pixabay | Broken | URLs expire - do not use |
 
-### Import Without API Keys
+### Database Functions
 
-You can import content directly via MCP without configuring .env.local:
+| Function | Description |
+|----------|-------------|
+| `vote_content(p_content_id, p_vote_type)` | Increment upvotes/downvotes (SECURITY DEFINER) |
+| `flag_content(p_content_id)` | Set content status to flagged_not_pizza (SECURITY DEFINER) |
 
-```bash
-# Reddit (public JSON)
-curl -s "https://www.reddit.com/r/pizza/hot.json?limit=25" -H "User-Agent: PizzaSauce/1.0"
+### Key URLs
 
-# Tenor (public API)
-curl -s "https://g.tenor.com/v1/search?q=pizza&key=LIVDSRZULELA&limit=20"
-```
+| URL | Description |
+|-----|-------------|
+| https://pizzasauce.xyz | Production site |
+| https://pizzasauce.xyz/live | Livestream with voting, flagging |
+| https://pizzasauce.xyz/games | Games category (8 items) |
+| https://pizzasauce.xyz/browse | Content browser |
+| https://pizzasauce.xyz/admin | Admin dashboard |
 
-Then insert via `mcp__supabase-pizzacontent__execute_sql`.
+### Key Files Changed This Session
+
+| File | Changes |
+|------|---------|
+| `src/components/live/ContentDisplay.tsx` | Flag button, YouTube embed fix |
+| `src/components/live/LiveStreamPlayer.tsx` | Source badge, removed audio button |
+| `src/app/api/content/flag/route.ts` | Updated to use RPC function |
+| `scripts/import-archive.mjs` | New - Archive.org import script |
+
+### Git Status
+
+- **Branch**: main
+- **Latest commits**:
+  - `b75eed1` feat: Show source name with link in upper left
+  - `137502b` fix: Improve flag button visual feedback
+  - `ec56fdd` feat: Add flag feedback UI and Archive.org import script
+  - `ceaaf1f` fix: Improve live stream UX
+- **Open PRs**: None
+- **Active worktrees**: None
 
 ### Environment Variables
 
@@ -114,39 +141,10 @@ YOUTUBE_API_KEY=<from Google Cloud Console>
 - **MCP**: supabase-pizzacontent
 - **Content status enum**: pending, approved, rejected, featured, flagged_not_pizza, flagged_broken
 - **Content type enum**: gif, meme, video, music, photo, art, game
-- **Vote function**: `vote_content(p_content_id UUID, p_vote_type TEXT)` - safely increments upvotes/downvotes
-
-### Key URLs
-
-| URL | Description |
-|-----|-------------|
-| https://pizzasauce.xyz | Production site |
-| https://pizzasauce.xyz/live | Livestream with voting |
-| https://pizzasauce.xyz/games | Games category (8 items) |
-| https://pizzasauce.xyz/browse | Content browser with infinite scroll |
-| https://pizzasauce.xyz/admin | Admin dashboard |
-
-### Key Files
-
-| File | Description |
-|------|-------------|
-| `src/app/api/content/vote/route.ts` | Voting API (uses RPC) |
-| `src/components/live/ContentDisplay.tsx` | Livestream display with vote buttons |
-| `scripts/import-games-*.mjs` | Games import scripts |
-| `scripts/import-*.mjs` | All content import scripts (17 total) |
-| `scripts/check-broken-links.mjs` | Broken link checker |
-| `plans/games-import-sources.md` | Games import research/plan |
-
-### Git Status
-
-- **Branch**: main
-- **Latest commit**: feat: Add pizza games import scripts (PR #7)
-- **Open PRs**: None
-- **Active worktrees**: None
 
 ### Next Steps
 
-1. **Import more content** - Can use MCP directly or add API keys to .env.local
-2. **Add more games** - Run RAWG.io import with API key for more games
-3. **YouTube gaming content** - Import Pizza Tower gameplay/speedruns
-4. **Consider**: Auto-import scheduled via Edge Function
+1. **Import more content** - Target 2,000+ items (background agent running)
+2. **Add Flickr/Vimeo** - Get API keys and create import scripts
+3. **Auto-import** - Consider Edge Function for scheduled imports
+4. **Content moderation** - Review flagged items in admin
