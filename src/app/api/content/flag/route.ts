@@ -15,8 +15,9 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
 
     // Use flag_content RPC function to bypass RLS
+    // Cast to any since TypeScript types may not include this function yet
     const { error } = await supabase
-      .rpc('flag_content', {
+      .rpc('flag_content' as any, {
         p_content_id: contentId,
       })
 
