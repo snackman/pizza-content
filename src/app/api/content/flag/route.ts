@@ -3,30 +3,22 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
-    const { contentId, reason } = await request.json()
+    const { contentId } = await request.json()
 
-    if (!contentId || !reason) {
+    if (!contentId) {
       return NextResponse.json(
-        { error: 'Missing contentId or reason' },
-        { status: 400 }
-      )
-    }
-
-    if (!['not_pizza', 'broken'].includes(reason)) {
-      return NextResponse.json(
-        { error: 'Invalid reason. Must be "not_pizza" or "broken"' },
+        { error: 'Missing contentId' },
         { status: 400 }
       )
     }
 
     const supabase = await createClient()
 
-    const status = reason === 'not_pizza' ? 'flagged_not_pizza' : 'flagged_broken'
-
+    // Use flag_content RPC function to bypass RLS
     const { error } = await supabase
-      .from('content')
-      .update({ status })
-      .eq('id', contentId)
+      .rpc('flag_content', {
+        p_content_id: contentId,
+      })
 
     if (error) {
       console.error('Error flagging content:', error)
@@ -36,7 +28,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ success: true, status })
+    return NextResponse.json({ success: true, message: 'Flagged for review' })
   } catch (error) {
     console.error('Error in flag API:', error)
     return NextResponse.json(

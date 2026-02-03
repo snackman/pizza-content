@@ -22,6 +22,8 @@ export function ContentDisplay({
   const [upvotes, setUpvotes] = useState(0)
   const [downvotes, setDownvotes] = useState(0)
   const [isVoting, setIsVoting] = useState(false)
+  const [isFlagged, setIsFlagged] = useState(false)
+  const [flagMessage, setFlagMessage] = useState('')
   const videoRef = useRef<HTMLVideoElement>(null)
 
   // Handle content transitions
@@ -35,6 +37,9 @@ export function ContentDisplay({
         // Initialize vote counts from content
         setUpvotes(content?.upvotes ?? 0)
         setDownvotes(content?.downvotes ?? 0)
+        // Reset flag state for new content
+        setIsFlagged(false)
+        setFlagMessage('')
         setTimeout(() => {
           setIsTransitioning(false)
         }, 50)
@@ -175,19 +180,55 @@ export function ContentDisplay({
         </>
       )}
 
+      {/* Flag feedback message */}
+      {flagMessage && (
+        <div className="absolute top-16 right-4 bg-yellow-500 text-black px-3 py-2 rounded-lg text-sm font-medium z-20 animate-pulse">
+          {flagMessage}
+        </div>
+      )}
+
       {/* Flag, Vote Buttons and Link Button - always visible in corner */}
       <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
         {/* Flag Button */}
         <button
-          onClick={(e) => {
+          onClick={async (e) => {
             e.stopPropagation()
-            // TODO: Implement flag functionality
-            console.log('Flag content:', displayedContent.id)
+            if (isFlagged || !displayedContent) return
+
+            setIsFlagged(true)
+            setFlagMessage('Flagging...')
+
+            try {
+              const response = await fetch('/api/content/flag', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contentId: displayedContent.id }),
+              })
+
+              if (response.ok) {
+                setFlagMessage('Flagged for review!')
+                setTimeout(() => setFlagMessage(''), 2000)
+              } else {
+                setFlagMessage('Failed to flag')
+                setIsFlagged(false)
+                setTimeout(() => setFlagMessage(''), 2000)
+              }
+            } catch (error) {
+              console.error('Flag error:', error)
+              setFlagMessage('Failed to flag')
+              setIsFlagged(false)
+              setTimeout(() => setFlagMessage(''), 2000)
+            }
           }}
-          className="p-2 bg-black/50 hover:bg-yellow-600/70 rounded-full text-white transition-colors"
-          title="Flag content"
+          disabled={isFlagged}
+          className={`p-2 rounded-full text-white transition-colors ${
+            isFlagged
+              ? 'bg-yellow-600/70 cursor-not-allowed'
+              : 'bg-black/50 hover:bg-yellow-600/70'
+          }`}
+          title={isFlagged ? 'Already flagged' : 'Flag content'}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill={isFlagged ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
           </svg>
         </button>
