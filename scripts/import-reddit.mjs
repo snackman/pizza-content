@@ -5,6 +5,16 @@
  * Imports pizza content from popular subreddits.
  * Uses Reddit's public JSON API (no auth required for read-only).
  *
+ * IMPORTANT: This script validates URLs before importing to prevent broken images.
+ * Reddit images (i.redd.it, preview.redd.it) are often deleted but URLs remain,
+ * showing "If you are looking at this image, it was probably deleted".
+ *
+ * Validation includes:
+ * - HEAD request to verify URL returns 200
+ * - Content-Type check (must be image/* or video/*)
+ * - File size check (small files are often placeholder images)
+ * - Filtering out self-posts, galleries, videos, and crossposts
+ *
  * Usage:
  *   SUPABASE_SERVICE_KEY=xxx node scripts/import-reddit.mjs
  *   SUPABASE_SERVICE_KEY=xxx node scripts/import-reddit.mjs --subreddit pizza
@@ -13,6 +23,111 @@
 
 import { ContentImporter, detectContentType } from './lib/content-importer.mjs'
 import { RateLimiter } from './lib/rate-limiter.mjs'
+
+// URL validation timeout (ms)
+const URL_VALIDATION_TIMEOUT = 5000
+
+/**
+ * Validates that a URL is accessible by performing a HEAD request.
+ * Returns true if the URL returns a 200 status with valid content type.
+ * Reddit URLs are notoriously unreliable - images get deleted but URLs remain.
+ */
+async function validateImageUrl(url) {
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), URL_VALIDATION_TIMEOUT)
+
+    const response = await fetch(url, {
+      method: 'HEAD',
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'PizzaContentBot/1.0 (image validation)'
+      }
+    })
+
+    clearTimeout(timeoutId)
+
+    // Check for successful response
+    if (!response.ok) {
+      console.log(`  [Skip] URL returned ${response.status}: ${url.slice(0, 80)}...`)
+      return false
+    }
+
+    // Check content type is an image/video
+    const contentType = response.headers.get('content-type') || ''
+    const validTypes = ['image/', 'video/']
+    const isValidType = validTypes.some(t => contentType.startsWith(t))
+
+    if (!isValidType) {
+      console.log(`  [Skip] Invalid content-type "${contentType}": ${url.slice(0, 80)}...`)
+      return false
+    }
+
+    // Check for Reddit's "deleted image" placeholder (small file size)
+    const contentLength = parseInt(response.headers.get('content-length') || '0', 10)
+    if (contentLength > 0 && contentLength < 1000) {
+      console.log(`  [Skip] Suspiciously small file (${contentLength} bytes): ${url.slice(0, 80)}...`)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log(`  [Skip] URL validation timeout: ${url.slice(0, 80)}...`)
+    } else {
+      console.log(`  [Skip] URL validation failed: ${error.message}`)
+    }
+    return false
+  }
+}
+
+/**
+ * Check if a Reddit post has valid, direct media.
+ * Filters out self-posts, text posts, and posts without direct image/video URLs.
+ */
+function hasDirectMedia(post) {
+  const data = post.data
+
+  // Skip self-posts (text-only)
+  if (data.is_self) {
+    return false
+  }
+
+  // Skip removed/deleted posts
+  if (data.removed || data.removed_by_category) {
+    return false
+  }
+
+  // Must have a URL
+  if (!data.url) {
+    return false
+  }
+
+  const url = data.url.toLowerCase()
+
+  // Skip Reddit video (complex to extract, often breaks)
+  if (url.includes('v.redd.it')) {
+    return false
+  }
+
+  // Skip gallery posts (multiple images, complex)
+  if (url.includes('/gallery/') || data.is_gallery) {
+    return false
+  }
+
+  // Skip crosspost references
+  if (data.crosspost_parent_list?.length > 0) {
+    return false
+  }
+
+  // Must be a direct image link or from known image hosts
+  const isDirectImage = url.match(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/)
+  const isImageHost = url.includes('i.redd.it') ||
+                      url.includes('i.imgur.com') ||
+                      url.includes('media.giphy.com')
+
+  return isDirectImage || isImageHost
+}
 
 // Default configuration
 const DEFAULT_SUBREDDITS = ['pizza', 'pizzacrimes', 'FoodPorn', 'CasualUK']
@@ -110,8 +225,13 @@ async function fetchSubreddit(subreddit, { sort, time, limit }) {
 function transformPost(post, subreddit) {
   const data = post.data
 
-  // Skip self-posts, removed posts, and NSFW
-  if (data.is_self || data.removed || data.over_18) {
+  // Skip NSFW content
+  if (data.over_18) {
+    return null
+  }
+
+  // Use the new hasDirectMedia check for better filtering
+  if (!hasDirectMedia(post)) {
     return null
   }
 
@@ -222,8 +342,23 @@ async function main() {
           const posts = await fetchSubreddit(subreddit, config)
           return posts
         },
-        // Transform function
-        (post) => transformPost(post, subreddit)
+        // Transform function (async to support URL validation)
+        async (post) => {
+          const content = transformPost(post, subreddit)
+          if (!content) return null
+
+          // Validate the media URL is accessible before importing
+          // This prevents importing deleted Reddit images
+          console.log(`  [Validate] Checking URL: ${content.url.slice(0, 60)}...`)
+          const isValid = await validateImageUrl(content.url)
+
+          if (!isValid) {
+            return null // Skip this post
+          }
+
+          console.log(`  [Valid] URL is accessible`)
+          return content
+        }
       )
     } catch (error) {
       console.error(`[Reddit] Error importing r/${subreddit}:`, error.message)
