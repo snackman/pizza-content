@@ -195,8 +195,9 @@ export function ContentDisplay({
             e.stopPropagation()
             if (isFlagged || !displayedContent) return
 
+            // Immediately show flagged state
             setIsFlagged(true)
-            setFlagMessage('Flagging...')
+            setFlagMessage('Flagged!')
 
             try {
               const response = await fetch('/api/content/flag', {
@@ -221,10 +222,10 @@ export function ContentDisplay({
             }
           }}
           disabled={isFlagged}
-          className={`p-2 rounded-full text-white transition-colors ${
+          className={`p-2 rounded-full transition-all duration-200 ${
             isFlagged
-              ? 'bg-yellow-600/70 cursor-not-allowed'
-              : 'bg-black/50 hover:bg-yellow-600/70'
+              ? 'bg-yellow-500 text-black scale-110 cursor-not-allowed shadow-lg shadow-yellow-500/50'
+              : 'bg-black/50 text-white hover:bg-yellow-500 hover:text-black'
           }`}
           title={isFlagged ? 'Already flagged' : 'Flag content'}
         >
