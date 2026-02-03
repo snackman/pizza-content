@@ -442,7 +442,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      vote_content: {
+        Args: { p_content_id: string; p_vote_type: string }
+        Returns: {
+          downvotes: number
+          upvotes: number
+        }[]
+      }
     }
     Enums: {
       content_status: "pending" | "approved" | "rejected" | "featured" | "flagged_not_pizza" | "flagged_broken"
@@ -576,7 +582,7 @@ export const Constants = {
   public: {
     Enums: {
       content_status: ["pending", "approved", "rejected", "featured", "flagged_not_pizza", "flagged_broken"],
-      content_type: ["gif", "meme", "video", "music", "photo", "art"],
+      content_type: ["gif", "meme", "video", "music", "photo", "art", "game"],
       request_status: ["open", "in_progress", "fulfilled", "closed"],
     },
   },
