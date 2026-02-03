@@ -109,6 +109,22 @@ export function ContentDisplay({
         </>
       )}
 
+      {/* Link Button - always visible in corner */}
+      {(displayedContent.source_url || displayedContent.url) && (
+        <a
+          href={displayedContent.source_url || displayedContent.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute top-4 right-4 p-3 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors z-10"
+          title={`View on ${displayedContent.source_platform || 'source'}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
+      )}
+
       {/* Content Info Overlay */}
       {showInfo && (
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
@@ -116,10 +132,15 @@ export function ContentDisplay({
           {displayedContent.description && (
             <p className="text-white/80 mt-1">{displayedContent.description}</p>
           )}
-          <div className="flex gap-2 mt-2">
+          <div className="flex items-center gap-2 mt-2">
             <span className="px-2 py-1 bg-white/20 rounded text-white text-sm uppercase">
               {displayedContent.type}
             </span>
+            {displayedContent.source_platform && (
+              <span className="px-2 py-1 bg-white/10 rounded text-white/70 text-sm">
+                {displayedContent.source_platform}
+              </span>
+            )}
             {displayedContent.tags?.slice(0, 3).map((tag) => (
               <span
                 key={tag}
