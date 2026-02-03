@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Content } from '@/types/database'
@@ -8,40 +8,87 @@ import { ContentCard } from '@/components/content/ContentCard'
 
 type ContentType = 'all' | 'gif' | 'meme' | 'video' | 'music' | 'photo' | 'art'
 
+const ITEMS_PER_PAGE = 24
+
 export default function BrowsePage() {
   const [content, setContent] = useState<Content[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+  const [page, setPage] = useState(0)
   const [filter, setFilter] = useState<ContentType>('all')
   const [searchQuery, setSearchQuery] = useState('')
 
-  const supabase = createClient()
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  const supabase = useMemo(() => createClient(), [])
 
-  useEffect(() => {
-    async function fetchContent() {
+  const fetchContent = useCallback(async (pageNum: number, reset: boolean = false) => {
+    if (reset) {
       setIsLoading(true)
-      let query = supabase
-        .from('content')
-        .select('*')
-        .in('status', ['approved', 'featured'])
-        .order('created_at', { ascending: false })
-        .limit(200)
-
-      if (filter !== 'all') {
-        query = query.eq('type', filter)
-      }
-
-      const { data, error } = await query
-
-      if (error) {
-        console.error('Error fetching content:', error)
-      } else {
-        setContent(data || [])
-      }
-      setIsLoading(false)
+    } else {
+      setIsLoadingMore(true)
     }
 
-    fetchContent()
+    const from = pageNum * ITEMS_PER_PAGE
+    const to = from + ITEMS_PER_PAGE - 1
+
+    let query = supabase
+      .from('content')
+      .select('*')
+      .in('status', ['approved', 'featured'])
+      .order('created_at', { ascending: false })
+      .range(from, to)
+
+    if (filter !== 'all') {
+      query = query.eq('type', filter)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Error fetching content:', error)
+    } else {
+      const newItems = data || []
+      if (reset) {
+        setContent(newItems)
+      } else {
+        setContent(prev => [...prev, ...newItems])
+      }
+      setHasMore(newItems.length === ITEMS_PER_PAGE)
+    }
+
+    setIsLoading(false)
+    setIsLoadingMore(false)
   }, [filter, supabase])
+
+  // Initial load and filter changes
+  useEffect(() => {
+    setPage(0)
+    setHasMore(true)
+    fetchContent(0, true)
+  }, [filter, fetchContent])
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoading && !isLoadingMore) {
+          setPage(prev => {
+            const nextPage = prev + 1
+            fetchContent(nextPage, false)
+            return nextPage
+          })
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasMore, isLoading, isLoadingMore, fetchContent])
 
   const filteredContent = content.filter((item) => {
     if (!searchQuery) return true
@@ -67,7 +114,7 @@ export default function BrowsePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           {/* Type Filter */}
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {(['all', 'gif', 'meme', 'video', 'music', 'photo', 'art'] as ContentType[]).map((type) => (
               <button
                 key={type}
@@ -94,7 +141,7 @@ export default function BrowsePage() {
         </div>
 
         <p className="mt-4 text-gray-500">
-          {filteredContent.length} items found
+          {filteredContent.length} items loaded
         </p>
       </div>
 
@@ -116,11 +163,28 @@ export default function BrowsePage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredContent.map((item) => (
-              <ContentCard key={item.id} item={item} showType />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {filteredContent.map((item) => (
+                <ContentCard key={item.id} item={item} showType />
+              ))}
+            </div>
+
+            {/* Sentinel for infinite scroll */}
+            <div ref={sentinelRef} className="h-10 mt-8">
+              {isLoadingMore && (
+                <div className="text-center">
+                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-4 border-purple-500 border-t-transparent"></div>
+                  <p className="mt-2 text-gray-500 text-sm">Loading more...</p>
+                </div>
+              )}
+              {!hasMore && content.length > 0 && (
+                <p className="text-center text-gray-400 text-sm">
+                  You've seen it all! ({content.length} items)
+                </p>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>
