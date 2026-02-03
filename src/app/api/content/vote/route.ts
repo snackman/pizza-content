@@ -14,37 +14,16 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // Get current counts
-    const { data: content, error: fetchError } = await supabase
-      .from('content')
-      .select('upvotes, downvotes')
-      .eq('id', contentId)
+    // Use the vote_content function which bypasses RLS
+    const { data, error } = await supabase
+      .rpc('vote_content', {
+        p_content_id: contentId,
+        p_vote_type: vote,
+      })
       .single()
 
-    if (fetchError || !content) {
-      return NextResponse.json(
-        { error: 'Content not found' },
-        { status: 404 }
-      )
-    }
-
-    // Increment the appropriate column
-    const currentUpvotes = content.upvotes ?? 0
-    const currentDownvotes = content.downvotes ?? 0
-
-    const updateData = vote === 'up'
-      ? { upvotes: currentUpvotes + 1 }
-      : { downvotes: currentDownvotes + 1 }
-
-    const { data: updated, error: updateError } = await supabase
-      .from('content')
-      .update(updateData)
-      .eq('id', contentId)
-      .select('upvotes, downvotes')
-      .single()
-
-    if (updateError) {
-      console.error('Error updating vote:', updateError)
+    if (error) {
+      console.error('Error recording vote:', error)
       return NextResponse.json(
         { error: 'Failed to record vote' },
         { status: 500 }
@@ -52,8 +31,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      upvotes: updated.upvotes ?? 0,
-      downvotes: updated.downvotes ?? 0,
+      upvotes: data?.upvotes ?? 0,
+      downvotes: data?.downvotes ?? 0,
     })
   } catch (error) {
     console.error('Vote API error:', error)
