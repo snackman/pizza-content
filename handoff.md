@@ -1,21 +1,53 @@
 # Pizza Content - Session Handoff
 
-## Session Summary (Feb 2, 2026)
+## Session Summary (Feb 3, 2026)
 
 ### Content Database Status
-- **Total content**: 1,019 items
-- **Visible**: 1,019 (all approved)
-- **Flagged**: 0
+- **Total content**: ~1,019 items
+- **Types**: GIFs (344), Photos (260), Music (244), Videos (100), Memes (48), Art (23)
+- **New type added**: Games (0 items yet)
 
-### Content by Type
-| Type | Count |
-|------|-------|
-| GIFs | 344 |
-| Photos | 260 |
-| Music | 244 |
-| Videos | 100 |
-| Memes | 46 |
-| Art | 23 |
+### Known Issues
+
+#### 1. **VOTING NOT SAVING** (Priority: High)
+- Upvote/downvote buttons appear on livestream but votes don't persist
+- API endpoint: `/api/content/vote/route.ts`
+- Database columns added: `upvotes`, `downvotes` on content table
+- **Debug steps needed:**
+  - Check browser console for errors when clicking vote buttons
+  - Verify API endpoint is being called
+  - Check if database columns exist and are writable
+  - Test API directly: `curl -X POST /api/content/vote -d '{"contentId":"xxx","vote":"up"}'`
+
+#### 2. Broken Link Checker Running
+- Agent scanning URLs via MCP (in progress)
+- Will flag broken content as `flagged_broken`
+
+### Features Added This Session
+
+1. **Infinite Scroll on Browse Page**
+   - Loads 24 items at a time
+   - Intersection Observer for scroll detection
+   - Shows total count (not loaded count)
+
+2. **Games Content Category**
+   - Database: `game` added to content_type enum
+   - New `/games` page with indigo/purple theme
+   - Added to nav, home page, browse filters, submission form
+
+3. **Broken Link Checker** (`npm run check-links`)
+   - Script: `scripts/check-broken-links.mjs`
+   - Utility: `scripts/lib/url-checker.mjs`
+   - Checks URLs, flags broken as `flagged_broken`
+   - Requires `SUPABASE_SERVICE_KEY` in `.env.local`
+
+4. **Livestream Enhancements**
+   - Link button (top right) - opens content source
+   - Upvote/downvote buttons (NOT WORKING - see issue above)
+
+5. **Fixed Supabase Anon Key**
+   - Changed from `sb_publishable_...` format to JWT format
+   - Updated in both `.env.local` and Vercel env vars
 
 ### API Status
 | API | Status | Notes |
@@ -29,88 +61,41 @@
 | Tumblr | ✅ Working | TUMBLR_API_KEY configured |
 | TikTok | ❌ Down | RapidAPI returning 503 errors |
 | Reddit | ✅ Working | No API key needed (public JSON API) |
-| Imgur | ⏳ Needs setup | Need IMGUR_CLIENT_ID |
-| Google Drive | ✅ Working | Music sync working |
+| Imgur | ❌ Broken | Registration closed, skip it |
 
-### Features Added This Session
+### Environment Variables Needed
 
-1. **Content Flagging System**
-   - Added `flagged_not_pizza` and `flagged_broken` status values
-   - Flag button on content cards (hover to see, click for dropdown)
-   - API endpoint: `/api/content/flag`
-   - Flagged content hidden from browse page
-
-2. **Admin Dashboard** (`/admin`)
-   - Overview cards (total, visible, flagged content)
-   - API status list with docs links
-   - Content breakdown by type and platform
-   - Recent import logs
-   - Import command reference
-
-3. **Filter Label Fix**
-   - "Music" and "Art" now display correctly (not "Musics"/"Arts")
-
-### Known Issues
-
-1. **Browse page not loading content**
-   - Agent dispatched to fix using Playwright
-   - All 1,019 items have status 'approved' in database
-   - Query should work but content not displaying on frontend
-
-2. **TikTok API down**
-   - RapidAPI TikTok service returning 503
-   - Wait for service to recover or find alternative provider
-
-### Pending Work
-
-1. **Games category** - Planning agent dispatched, check `plans/games-content-category.md`
-2. **Browse page fix** - Agent working on it
-3. **Imgur setup** - Need to register app at https://api.imgur.com/oauth2/addclient
-
-### Environment Variables (.env.local)
-All API keys are configured in `.env.local`:
-- GIPHY_API_KEY
-- PEXELS_API_KEY
-- PIXABAY_API_KEY
-- YOUTUBE_API_KEY
-- UNSPLASH_ACCESS_KEY
-- RAPIDAPI_KEY (for TikTok)
-- DEVIANTART_CLIENT_ID
-- DEVIANTART_CLIENT_SECRET
-- TUMBLR_API_KEY
-- SUPABASE_SERVICE_KEY
-- GOOGLE_SERVICE_ACCOUNT_JSON
-
-### Import Commands
-```bash
-npm run import-giphy
-npm run import-pexels
-npm run import-pixabay
-npm run import-unsplash
-npm run import-youtube
-npm run import-deviantart
-npm run import-tumblr
-npm run import-reddit
-npm run import-tiktok  # Currently broken (503)
-npm run sync-music
+**.env.local:**
 ```
-
-### Key Files
-- `/admin` - Admin dashboard
-- `/browse` - Content browser (needs fix)
-- `/art` - Art gallery page
-- `/music` - Music player page
-- `src/components/content/ContentCard.tsx` - Card with flag button
-- `src/app/api/content/flag/route.ts` - Flag API endpoint
-- `scripts/` - All import scripts
+NEXT_PUBLIC_SUPABASE_URL=https://hecsxlqeviirichoohkl.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_KEY=<get from Supabase dashboard - needed for check-links script>
+```
 
 ### Database
 - **Project ID**: hecsxlqeviirichoohkl
 - **MCP**: supabase-pizzacontent
 - Content status enum: pending, approved, rejected, featured, flagged_not_pizza, flagged_broken
+- Content type enum: gif, meme, video, music, photo, art, game
+- **New columns**: upvotes (int), downvotes (int) on content table
+
+### Key Files
+- `/live` - Livestream page with voting (broken)
+- `/browse` - Content browser with infinite scroll
+- `/games` - New games category page
+- `/admin` - Admin dashboard
+- `src/app/api/content/vote/route.ts` - Voting API (check this)
+- `src/components/live/ContentDisplay.tsx` - Livestream display with vote buttons
+- `scripts/check-broken-links.mjs` - Broken link checker
+
+### PRs Merged This Session
+- #3: Infinite scroll
+- #4: Games content category
+- #5: Broken link checker
+- #6: Livestream voting (not working properly)
 
 ### Next Steps
-1. Check if browse page fix agent completed successfully
-2. Review games category plan when ready
-3. Set up Imgur API if desired
-4. Monitor TikTok API for recovery
+1. **Fix voting** - Debug why votes aren't persisting
+2. Review broken link checker results
+3. Import some game content (itch.io, YouTube gameplay)
+4. Consider adding SUPABASE_SERVICE_KEY to env for check-links script
