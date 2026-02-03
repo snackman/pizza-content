@@ -233,8 +233,8 @@ export function LiveStreamPlayer({ initialSettings }: LiveStreamPlayerProps) {
         volume={settings.musicVolume}
       />
 
-      {/* Source badge with link (when controls hidden) */}
-      {!controlsVisible && isPlaying && currentContent && (
+      {/* Source badge with link - always visible */}
+      {currentContent && (
         <a
           href={currentContent.source_url || currentContent.url}
           target="_blank"
