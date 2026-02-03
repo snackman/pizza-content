@@ -12,6 +12,7 @@ const ITEMS_PER_PAGE = 24
 
 export default function BrowsePage() {
   const [content, setContent] = useState<Content[]>([])
+  const [totalCount, setTotalCount] = useState<number>(0)
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
@@ -61,12 +62,28 @@ export default function BrowsePage() {
     setIsLoadingMore(false)
   }, [filter, supabase])
 
+  // Fetch total count
+  const fetchTotalCount = useCallback(async () => {
+    let query = supabase
+      .from('content')
+      .select('*', { count: 'exact', head: true })
+      .in('status', ['approved', 'featured'])
+
+    if (filter !== 'all') {
+      query = query.eq('type', filter)
+    }
+
+    const { count } = await query
+    setTotalCount(count || 0)
+  }, [filter, supabase])
+
   // Initial load and filter changes
   useEffect(() => {
     setPage(0)
     setHasMore(true)
     fetchContent(0, true)
-  }, [filter, fetchContent])
+    fetchTotalCount()
+  }, [filter, fetchContent, fetchTotalCount])
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
@@ -141,7 +158,7 @@ export default function BrowsePage() {
         </div>
 
         <p className="mt-4 text-gray-500">
-          {filteredContent.length} items loaded
+          {totalCount.toLocaleString()} items
         </p>
       </div>
 
@@ -180,7 +197,7 @@ export default function BrowsePage() {
               )}
               {!hasMore && content.length > 0 && (
                 <p className="text-center text-gray-400 text-sm">
-                  You've seen it all! ({content.length} items)
+                  You've seen it all!
                 </p>
               )}
             </div>
