@@ -9,6 +9,7 @@ export const FILE_SIZE_LIMITS: Record<ContentType, number> = {
   music: 20 * 1024 * 1024, // 20MB
   photo: 10 * 1024 * 1024, // 10MB
   art: 15 * 1024 * 1024, // 15MB
+  game: 15 * 1024 * 1024, // 15MB (screenshots, clips)
 }
 
 // Allowed file extensions by type
@@ -19,6 +20,7 @@ export const ALLOWED_EXTENSIONS: Record<ContentType, string[]> = {
   music: ['.mp3', '.wav', '.ogg', '.m4a'],
   photo: ['.jpg', '.jpeg', '.png', '.webp'],
   art: ['.jpg', '.jpeg', '.png', '.webp', '.svg'],
+  game: ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp4'],
 }
 
 // Allowed MIME types by content type
@@ -29,6 +31,7 @@ export const ALLOWED_MIME_TYPES: Record<ContentType, string[]> = {
   music: ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp4', 'audio/x-m4a'],
   photo: ['image/jpeg', 'image/png', 'image/webp'],
   art: ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
+  game: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4'],
 }
 
 // External URL patterns
