@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Pizza Live Stream - Fullscreen Pizza Content",
+  title: "Pizza Live Stream - Fullscreen Pizza Sauce",
   description: "A fullscreen visual display cycling through pizza GIFs, memes, and videos. Perfect for pizzerias or live streams.",
 }
 

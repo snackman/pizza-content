@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pizza Content - GIFs, Memes & Viral Videos",
+  title: "Pizza Sauce - GIFs, Memes & Viral Videos",
   description: "The ultimate repository for pizza-related content. Find and share pizza GIFs, memes, and viral videos.",
 };
 

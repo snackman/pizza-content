@@ -68,7 +68,7 @@ export default function LoginPage() {
       <div className="text-center mb-8">
         <div className="text-5xl mb-4">🍕</div>
         <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-        <p className="text-gray-600 mt-2">Sign in to Pizza Content</p>
+        <p className="text-gray-600 mt-2">Sign in to Pizza Sauce</p>
       </div>
 
       {error && (
