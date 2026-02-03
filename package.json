@@ -25,7 +25,8 @@
     "import-dribbble": "node scripts/import-dribbble.mjs",
     "import-deviantart": "node scripts/import-deviantart.mjs",
     "import-tiktok": "node scripts/import-tiktok.mjs",
-    "import-tumblr": "node scripts/import-tumblr.mjs"
+    "import-tumblr": "node scripts/import-tumblr.mjs",
+    "check-links": "node scripts/check-broken-links.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
