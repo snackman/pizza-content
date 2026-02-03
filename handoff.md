@@ -19,9 +19,11 @@
   - Check if database columns exist and are writable
   - Test API directly: `curl -X POST /api/content/vote -d '{"contentId":"xxx","vote":"up"}'`
 
-#### 2. Broken Link Checker Running
-- Agent scanning URLs via MCP (in progress)
-- Will flag broken content as `flagged_broken`
+#### 2. Pixabay URLs Expired (15 items flagged)
+- Broken link checker found 15 broken Pixabay photos
+- All flagged as `flagged_broken` (hidden from site)
+- Root cause: Pixabay signed URLs expire
+- Fix: Re-import with permanent CDN URLs or delete
 
 ### Features Added This Session
 
