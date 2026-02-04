@@ -3,15 +3,18 @@
  * GIPHY Importer
  *
  * Imports pizza GIFs from GIPHY's API.
+ * When run with --all-stars flag, searches for content featuring Pizza All Stars.
  *
  * Usage:
  *   SUPABASE_SERVICE_KEY=xxx GIPHY_API_KEY=xxx node scripts/import-giphy.mjs
  *   SUPABASE_SERVICE_KEY=xxx GIPHY_API_KEY=xxx node scripts/import-giphy.mjs --query "pizza party"
  *   SUPABASE_SERVICE_KEY=xxx GIPHY_API_KEY=xxx node scripts/import-giphy.mjs --trending
+ *   SUPABASE_SERVICE_KEY=xxx GIPHY_API_KEY=xxx node scripts/import-giphy.mjs --all-stars
  */
 
 import { ContentImporter } from './lib/content-importer.mjs'
 import { RateLimiter } from './lib/rate-limiter.mjs'
+import { getAllStarsSearchTerms } from './lib/all-stars.mjs'
 
 // Default configuration
 const DEFAULT_QUERY = 'pizza'
@@ -25,6 +28,7 @@ function parseArgs() {
     query: DEFAULT_QUERY,
     limit: DEFAULT_LIMIT,
     trending: false,
+    allStars: false,
     dryRun: false,
     offset: 0
   }
@@ -47,6 +51,10 @@ function parseArgs() {
       case '-t':
         config.trending = true
         break
+      case '--all-stars':
+      case '-a':
+        config.allStars = true
+        break
       case '--dry-run':
         config.dryRun = true
         break
@@ -60,9 +68,10 @@ Usage:
 
 Options:
   --query, -q <term>      Search query (default: "${DEFAULT_QUERY}")
-  --limit, -l <n>         Number of GIFs to fetch (default: ${DEFAULT_LIMIT}, max: 100)
+  --limit, -l <n>         Number of GIFs to fetch per query (default: ${DEFAULT_LIMIT}, max: 100)
   --offset, -o <n>        Offset for pagination (default: 0)
   --trending, -t          Fetch trending GIFs instead of searching
+  --all-stars, -a         Search for all Pizza All Stars (from database)
   --dry-run               Show what would be imported without saving
   --help, -h              Show this help message
 
@@ -74,6 +83,7 @@ Examples:
   node scripts/import-giphy.mjs
   node scripts/import-giphy.mjs --query "pizza party" --limit 25
   node scripts/import-giphy.mjs --trending
+  node scripts/import-giphy.mjs --all-stars --limit 10
 `)
         process.exit(0)
     }
@@ -160,30 +170,72 @@ async function main() {
   }
 
   console.log('\n=== GIPHY Pizza Importer ===\n')
-  console.log(`Mode: ${config.trending ? 'Trending' : `Search "${config.query}"`}`)
-  console.log(`Limit: ${config.limit}, Offset: ${config.offset}`)
-  if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
 
-  const sourceId = config.trending ? 'trending' : config.query.replace(/\s+/g, '-').toLowerCase()
+  // If --all-stars flag, fetch all search terms and run multiple queries
+  if (config.allStars) {
+    console.log('Mode: Pizza All Stars (multiple queries)')
+    console.log(`Limit per query: ${config.limit}`)
+    if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
 
-  const importer = new ContentImporter({
-    platform: 'giphy',
-    sourceIdentifier: sourceId,
-    displayName: config.trending ? 'GIPHY Trending' : `GIPHY: ${config.query}`,
-    rateLimiter: new RateLimiter({ requestsPerMinute: 42 }), // GIPHY free tier limit
-    dryRun: config.dryRun
-  })
+    const searchTerms = await getAllStarsSearchTerms()
+    console.log(`Found ${searchTerms.length} search terms from All Stars\n`)
 
-  try {
-    await importer.run(
-      // Fetch function
-      async () => fetchGiphy(apiKey, config),
-      // Transform function
-      transformGif
-    )
-  } catch (error) {
-    console.error('[GIPHY] Error:', error.message)
-    process.exit(1)
+    const rateLimiter = new RateLimiter({ requestsPerMinute: 42 })
+
+    for (const term of searchTerms) {
+      console.log(`\n--- Searching for "${term}" ---\n`)
+
+      const queryConfig = { ...config, query: term }
+      const sourceId = term.replace(/\s+/g, '-').toLowerCase()
+
+      const importer = new ContentImporter({
+        platform: 'giphy',
+        sourceIdentifier: sourceId,
+        displayName: `GIPHY: ${term}`,
+        rateLimiter,
+        dryRun: config.dryRun
+      })
+
+      try {
+        await importer.run(
+          async () => fetchGiphy(apiKey, queryConfig),
+          transformGif
+        )
+      } catch (error) {
+        console.error(`[GIPHY] Error for "${term}":`, error.message)
+        // Continue with next term
+      }
+
+      // Small delay between queries
+      await new Promise(r => setTimeout(r, 1000))
+    }
+  } else {
+    // Single query mode
+    console.log(`Mode: ${config.trending ? 'Trending' : `Search "${config.query}"`}`)
+    console.log(`Limit: ${config.limit}, Offset: ${config.offset}`)
+    if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
+
+    const sourceId = config.trending ? 'trending' : config.query.replace(/\s+/g, '-').toLowerCase()
+
+    const importer = new ContentImporter({
+      platform: 'giphy',
+      sourceIdentifier: sourceId,
+      displayName: config.trending ? 'GIPHY Trending' : `GIPHY: ${config.query}`,
+      rateLimiter: new RateLimiter({ requestsPerMinute: 42 }), // GIPHY free tier limit
+      dryRun: config.dryRun
+    })
+
+    try {
+      await importer.run(
+        // Fetch function
+        async () => fetchGiphy(apiKey, config),
+        // Transform function
+        transformGif
+      )
+    } catch (error) {
+      console.error('[GIPHY] Error:', error.message)
+      process.exit(1)
+    }
   }
 
   console.log('\n=== Import Complete ===\n')
