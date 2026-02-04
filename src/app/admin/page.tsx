@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
 
 interface PlatformStats {
   platform: string
@@ -149,6 +150,26 @@ export default function AdminPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Quick Links */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Link
+            href="/admin/all-stars"
+            className="bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow"
+          >
+            <div className="text-2xl mb-2">⭐</div>
+            <div className="font-semibold">All Stars</div>
+            <div className="text-orange-100 text-sm">Manage profile photos</div>
+          </Link>
+          <Link
+            href="/admin/imports"
+            className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow"
+          >
+            <div className="text-2xl mb-2">📥</div>
+            <div className="font-semibold">Imports</div>
+            <div className="text-blue-100 text-sm">Content import dashboard</div>
+          </Link>
+        </div>
+
         {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl shadow p-6">
