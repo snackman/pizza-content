@@ -4,14 +4,17 @@
  *
  * Imports high-quality pizza photos from Unsplash.
  * All Unsplash photos are free to use (with attribution appreciated).
+ * When run with --all-stars flag, searches for content featuring Pizza All Stars.
  *
  * Usage:
  *   SUPABASE_SERVICE_KEY=xxx UNSPLASH_ACCESS_KEY=xxx node scripts/import-unsplash.mjs
  *   SUPABASE_SERVICE_KEY=xxx UNSPLASH_ACCESS_KEY=xxx node scripts/import-unsplash.mjs --query "pepperoni pizza"
+ *   SUPABASE_SERVICE_KEY=xxx UNSPLASH_ACCESS_KEY=xxx node scripts/import-unsplash.mjs --all-stars
  */
 
 import { ContentImporter } from './lib/content-importer.mjs'
 import { RateLimiter } from './lib/rate-limiter.mjs'
+import { getAllStarsSearchTerms } from './lib/all-stars.mjs'
 
 // Default configuration
 const DEFAULT_QUERY = 'pizza'
@@ -27,6 +30,7 @@ function parseArgs() {
     orientation: 'squarish', // 'landscape', 'portrait', 'squarish'
     orderBy: 'relevant', // 'relevant', 'latest'
     page: 1,
+    allStars: false,
     dryRun: false
   }
 
@@ -51,6 +55,10 @@ function parseArgs() {
       case '-p':
         config.page = parseInt(args[++i], 10)
         break
+      case '--all-stars':
+      case '-a':
+        config.allStars = true
+        break
       case '--dry-run':
         config.dryRun = true
         break
@@ -68,6 +76,7 @@ Options:
   --orientation, -o <type>  Orientation: landscape, portrait, squarish (default: squarish)
   --order-by <type>         Order by: relevant, latest (default: relevant)
   --page, -p <n>            Page number for pagination (default: 1)
+  --all-stars, -a           Search for all Pizza All Stars (from database)
   --dry-run                 Show what would be imported without saving
   --help, -h                Show this help message
 
@@ -79,6 +88,7 @@ Examples:
   node scripts/import-unsplash.mjs
   node scripts/import-unsplash.mjs --query "pepperoni pizza" --orientation landscape
   node scripts/import-unsplash.mjs --order-by latest --page 2
+  node scripts/import-unsplash.mjs --all-stars --limit 10
 `)
         process.exit(0)
     }
@@ -169,30 +179,72 @@ async function main() {
   }
 
   console.log('\n=== Unsplash Pizza Importer ===\n')
-  console.log(`Query: "${config.query}"`)
-  console.log(`Orientation: ${config.orientation}, Order: ${config.orderBy}, Limit: ${config.limit}`)
-  if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
 
-  const sourceId = config.query.replace(/\s+/g, '-').toLowerCase()
+  // If --all-stars flag, fetch all search terms and run multiple queries
+  if (config.allStars) {
+    console.log('Mode: Pizza All Stars (multiple queries)')
+    console.log(`Limit per query: ${config.limit}`)
+    if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
 
-  const importer = new ContentImporter({
-    platform: 'unsplash',
-    sourceIdentifier: sourceId,
-    displayName: `Unsplash: ${config.query}`,
-    rateLimiter: new RateLimiter({ requestsPerMinute: 50 }), // Unsplash: 50 req/hour
-    dryRun: config.dryRun
-  })
+    const searchTerms = await getAllStarsSearchTerms()
+    console.log(`Found ${searchTerms.length} search terms from All Stars\n`)
 
-  try {
-    await importer.run(
-      // Fetch function
-      async () => fetchUnsplash(accessKey, config),
-      // Transform function
-      transformPhoto
-    )
-  } catch (error) {
-    console.error('[Unsplash] Error:', error.message)
-    process.exit(1)
+    const rateLimiter = new RateLimiter({ requestsPerMinute: 50 })
+
+    for (const term of searchTerms) {
+      console.log(`\n--- Searching for "${term}" ---\n`)
+
+      const queryConfig = { ...config, query: term }
+      const sourceId = term.replace(/\s+/g, '-').toLowerCase()
+
+      const importer = new ContentImporter({
+        platform: 'unsplash',
+        sourceIdentifier: sourceId,
+        displayName: `Unsplash: ${term}`,
+        rateLimiter,
+        dryRun: config.dryRun
+      })
+
+      try {
+        await importer.run(
+          async () => fetchUnsplash(accessKey, queryConfig),
+          transformPhoto
+        )
+      } catch (error) {
+        console.error(`[Unsplash] Error for "${term}":`, error.message)
+        // Continue with next term
+      }
+
+      // Small delay between queries
+      await new Promise(r => setTimeout(r, 1000))
+    }
+  } else {
+    // Single query mode
+    console.log(`Query: "${config.query}"`)
+    console.log(`Orientation: ${config.orientation}, Order: ${config.orderBy}, Limit: ${config.limit}`)
+    if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
+
+    const sourceId = config.query.replace(/\s+/g, '-').toLowerCase()
+
+    const importer = new ContentImporter({
+      platform: 'unsplash',
+      sourceIdentifier: sourceId,
+      displayName: `Unsplash: ${config.query}`,
+      rateLimiter: new RateLimiter({ requestsPerMinute: 50 }), // Unsplash: 50 req/hour
+      dryRun: config.dryRun
+    })
+
+    try {
+      await importer.run(
+        // Fetch function
+        async () => fetchUnsplash(accessKey, config),
+        // Transform function
+        transformPhoto
+      )
+    } catch (error) {
+      console.error('[Unsplash] Error:', error.message)
+      process.exit(1)
+    }
   }
 
   console.log('\n=== Import Complete ===\n')

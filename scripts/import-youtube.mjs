@@ -4,15 +4,18 @@
  *
  * Imports pizza-related videos from YouTube using the Data API v3.
  * Note: Videos are stored as links (not downloaded) due to YouTube's ToS.
+ * When run with --all-stars flag, searches for content featuring Pizza All Stars.
  *
  * Usage:
  *   SUPABASE_SERVICE_KEY=xxx YOUTUBE_API_KEY=xxx node scripts/import-youtube.mjs
  *   SUPABASE_SERVICE_KEY=xxx YOUTUBE_API_KEY=xxx node scripts/import-youtube.mjs --query "pizza making"
  *   SUPABASE_SERVICE_KEY=xxx YOUTUBE_API_KEY=xxx node scripts/import-youtube.mjs --order viewCount
+ *   SUPABASE_SERVICE_KEY=xxx YOUTUBE_API_KEY=xxx node scripts/import-youtube.mjs --all-stars
  */
 
 import { ContentImporter } from './lib/content-importer.mjs'
 import { RateLimiter } from './lib/rate-limiter.mjs'
+import { getAllStarsSearchTerms } from './lib/all-stars.mjs'
 
 // Default configuration
 const DEFAULT_QUERY = 'pizza'
@@ -28,6 +31,7 @@ function parseArgs() {
     order: 'relevance', // 'date', 'rating', 'relevance', 'title', 'viewCount'
     videoDuration: 'short', // 'any', 'short' (<4min), 'medium' (4-20min), 'long' (>20min)
     publishedAfter: null, // ISO 8601 date
+    allStars: false,
     dryRun: false,
     pageToken: ''
   }
@@ -56,6 +60,10 @@ function parseArgs() {
       case '--page-token':
         config.pageToken = args[++i]
         break
+      case '--all-stars':
+      case '-a':
+        config.allStars = true
+        break
       case '--dry-run':
         config.dryRun = true
         break
@@ -74,6 +82,7 @@ Options:
   --duration, -d <type>   Video duration: any, short, medium, long (default: short)
   --after <date>          Only videos published after this ISO 8601 date
   --page-token <token>    Page token for pagination
+  --all-stars, -a         Search for all Pizza All Stars (from database)
   --dry-run               Show what would be imported without saving
   --help, -h              Show this help message
 
@@ -85,6 +94,7 @@ Examples:
   node scripts/import-youtube.mjs
   node scripts/import-youtube.mjs --query "pizza making" --order viewCount
   node scripts/import-youtube.mjs --query "pizza review" --duration medium
+  node scripts/import-youtube.mjs --all-stars --limit 10
 `)
         process.exit(0)
     }
@@ -194,30 +204,72 @@ async function main() {
   }
 
   console.log('\n=== YouTube Pizza Importer ===\n')
-  console.log(`Query: "${config.query}"`)
-  console.log(`Order: ${config.order}, Duration: ${config.videoDuration}, Limit: ${config.limit}`)
-  if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
 
-  const sourceId = config.query.replace(/\s+/g, '-').toLowerCase()
+  // If --all-stars flag, fetch all search terms and run multiple queries
+  if (config.allStars) {
+    console.log('Mode: Pizza All Stars (multiple queries)')
+    console.log(`Limit per query: ${config.limit}`)
+    if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
 
-  const importer = new ContentImporter({
-    platform: 'youtube',
-    sourceIdentifier: sourceId,
-    displayName: `YouTube: ${config.query}`,
-    rateLimiter: new RateLimiter({ requestsPerMinute: 60 }), // YouTube quota is per day, not per minute
-    dryRun: config.dryRun
-  })
+    const searchTerms = await getAllStarsSearchTerms()
+    console.log(`Found ${searchTerms.length} search terms from All Stars\n`)
 
-  try {
-    await importer.run(
-      // Fetch function
-      async () => fetchYouTube(apiKey, config),
-      // Transform function
-      transformVideo
-    )
-  } catch (error) {
-    console.error('[YouTube] Error:', error.message)
-    process.exit(1)
+    const rateLimiter = new RateLimiter({ requestsPerMinute: 60 })
+
+    for (const term of searchTerms) {
+      console.log(`\n--- Searching for "${term}" ---\n`)
+
+      const queryConfig = { ...config, query: term }
+      const sourceId = term.replace(/\s+/g, '-').toLowerCase()
+
+      const importer = new ContentImporter({
+        platform: 'youtube',
+        sourceIdentifier: sourceId,
+        displayName: `YouTube: ${term}`,
+        rateLimiter,
+        dryRun: config.dryRun
+      })
+
+      try {
+        await importer.run(
+          async () => fetchYouTube(apiKey, queryConfig),
+          transformVideo
+        )
+      } catch (error) {
+        console.error(`[YouTube] Error for "${term}":`, error.message)
+        // Continue with next term
+      }
+
+      // Small delay between queries
+      await new Promise(r => setTimeout(r, 1000))
+    }
+  } else {
+    // Single query mode
+    console.log(`Query: "${config.query}"`)
+    console.log(`Order: ${config.order}, Duration: ${config.videoDuration}, Limit: ${config.limit}`)
+    if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
+
+    const sourceId = config.query.replace(/\s+/g, '-').toLowerCase()
+
+    const importer = new ContentImporter({
+      platform: 'youtube',
+      sourceIdentifier: sourceId,
+      displayName: `YouTube: ${config.query}`,
+      rateLimiter: new RateLimiter({ requestsPerMinute: 60 }), // YouTube quota is per day, not per minute
+      dryRun: config.dryRun
+    })
+
+    try {
+      await importer.run(
+        // Fetch function
+        async () => fetchYouTube(apiKey, config),
+        // Transform function
+        transformVideo
+      )
+    } catch (error) {
+      console.error('[YouTube] Error:', error.message)
+      process.exit(1)
+    }
   }
 
   console.log('\n=== Import Complete ===\n')

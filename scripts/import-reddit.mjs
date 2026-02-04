@@ -4,6 +4,7 @@
  *
  * Imports pizza content from popular subreddits.
  * Uses Reddit's public JSON API (no auth required for read-only).
+ * When run with --all-stars flag, searches for content featuring Pizza All Stars.
  *
  * IMPORTANT: This script validates URLs before importing to prevent broken images.
  * Reddit images (i.redd.it, preview.redd.it) are often deleted but URLs remain,
@@ -19,10 +20,12 @@
  *   SUPABASE_SERVICE_KEY=xxx node scripts/import-reddit.mjs
  *   SUPABASE_SERVICE_KEY=xxx node scripts/import-reddit.mjs --subreddit pizza
  *   SUPABASE_SERVICE_KEY=xxx node scripts/import-reddit.mjs --limit 50 --sort top --time week
+ *   SUPABASE_SERVICE_KEY=xxx node scripts/import-reddit.mjs --all-stars
  */
 
 import { ContentImporter, detectContentType } from './lib/content-importer.mjs'
 import { RateLimiter } from './lib/rate-limiter.mjs'
+import { getAllStarsSearchTerms } from './lib/all-stars.mjs'
 
 // URL validation timeout (ms)
 const URL_VALIDATION_TIMEOUT = 5000
@@ -143,6 +146,8 @@ function parseArgs() {
     limit: DEFAULT_LIMIT,
     sort: DEFAULT_SORT,
     time: DEFAULT_TIME,
+    allStars: false,
+    searchQuery: null, // For All Stars search mode
     dryRun: false
   }
 
@@ -166,6 +171,10 @@ function parseArgs() {
       case '-t':
         config.time = args[++i]
         break
+      case '--all-stars':
+      case '-a':
+        config.allStars = true
+        break
       case '--dry-run':
         config.dryRun = true
         break
@@ -183,6 +192,7 @@ Options:
   --limit, -l <n>         Number of posts to fetch per subreddit (default: ${DEFAULT_LIMIT})
   --sort <type>           Sort order: hot, new, top, rising (default: ${DEFAULT_SORT})
   --time, -t <period>     Time period for top/controversial: hour, day, week, month, year, all (default: ${DEFAULT_TIME})
+  --all-stars, -a         Search for all Pizza All Stars (from database)
   --dry-run               Show what would be imported without saving
   --help, -h              Show this help message
 
@@ -193,6 +203,7 @@ Examples:
   node scripts/import-reddit.mjs
   node scripts/import-reddit.mjs --subreddit pizza --sort top --time month
   node scripts/import-reddit.mjs --limit 50 --dry-run
+  node scripts/import-reddit.mjs --all-stars --limit 10
 `)
         process.exit(0)
     }
@@ -206,6 +217,35 @@ async function fetchSubreddit(subreddit, { sort, time, limit }) {
   const url = `https://www.reddit.com/r/${subreddit}/${sort}.json?limit=${limit}&t=${time}`
 
   console.log(`[Reddit] Fetching r/${subreddit}...`)
+
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'PizzaContentBot/1.0 (pizza content importer)'
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error(`Reddit API error: ${response.status} ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  return data?.data?.children || []
+}
+
+// Search Reddit for a query
+async function searchReddit(query, { sort, time, limit }) {
+  const params = new URLSearchParams({
+    q: query,
+    sort: sort,
+    t: time,
+    limit: limit.toString(),
+    type: 'link',
+    restrict_sr: 'false'
+  })
+
+  const url = `https://www.reddit.com/search.json?${params}`
+
+  console.log(`[Reddit] Searching for "${query}"...`)
 
   const response = await fetch(url, {
     headers: {
@@ -318,50 +358,103 @@ async function main() {
   const config = parseArgs()
 
   console.log('\n=== Reddit Pizza Importer ===\n')
-  console.log(`Subreddits: ${config.subreddits.join(', ')}`)
-  console.log(`Sort: ${config.sort}, Time: ${config.time}, Limit: ${config.limit}`)
-  if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
 
   const rateLimiter = new RateLimiter({ requestsPerMinute: 10 }) // Reddit rate limit
 
-  for (const subreddit of config.subreddits) {
-    console.log(`\n--- Importing r/${subreddit} ---\n`)
+  // If --all-stars flag, fetch all search terms and run multiple searches
+  if (config.allStars) {
+    console.log('Mode: Pizza All Stars (multiple searches)')
+    console.log(`Sort: ${config.sort}, Time: ${config.time}, Limit per query: ${config.limit}`)
+    if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
 
-    const importer = new ContentImporter({
-      platform: 'reddit',
-      sourceIdentifier: subreddit,
-      displayName: `r/${subreddit}`,
-      rateLimiter,
-      dryRun: config.dryRun
-    })
+    const searchTerms = await getAllStarsSearchTerms()
+    console.log(`Found ${searchTerms.length} search terms from All Stars\n`)
 
-    try {
-      await importer.run(
-        // Fetch function
-        async () => {
-          const posts = await fetchSubreddit(subreddit, config)
-          return posts
-        },
-        // Transform function (async to support URL validation)
-        async (post) => {
-          const content = transformPost(post, subreddit)
-          if (!content) return null
+    for (const term of searchTerms) {
+      console.log(`\n--- Searching for "${term}" ---\n`)
 
-          // Validate the media URL is accessible before importing
-          // This prevents importing deleted Reddit images
-          console.log(`  [Validate] Checking URL: ${content.url.slice(0, 60)}...`)
-          const isValid = await validateImageUrl(content.url)
+      const sourceId = `search-${term.replace(/\s+/g, '-').toLowerCase()}`
 
-          if (!isValid) {
-            return null // Skip this post
+      const importer = new ContentImporter({
+        platform: 'reddit',
+        sourceIdentifier: sourceId,
+        displayName: `Reddit Search: ${term}`,
+        rateLimiter,
+        dryRun: config.dryRun
+      })
+
+      try {
+        await importer.run(
+          async () => searchReddit(term, config),
+          async (post) => {
+            const subreddit = post.data?.subreddit || 'unknown'
+            const content = transformPost(post, subreddit)
+            if (!content) return null
+
+            console.log(`  [Validate] Checking URL: ${content.url.slice(0, 60)}...`)
+            const isValid = await validateImageUrl(content.url)
+
+            if (!isValid) {
+              return null
+            }
+
+            console.log(`  [Valid] URL is accessible`)
+            return content
           }
+        )
+      } catch (error) {
+        console.error(`[Reddit] Error searching for "${term}":`, error.message)
+        // Continue with next term
+      }
 
-          console.log(`  [Valid] URL is accessible`)
-          return content
-        }
-      )
-    } catch (error) {
-      console.error(`[Reddit] Error importing r/${subreddit}:`, error.message)
+      // Small delay between queries
+      await new Promise(r => setTimeout(r, 1000))
+    }
+  } else {
+    // Subreddit mode
+    console.log(`Subreddits: ${config.subreddits.join(', ')}`)
+    console.log(`Sort: ${config.sort}, Time: ${config.time}, Limit: ${config.limit}`)
+    if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
+
+    for (const subreddit of config.subreddits) {
+      console.log(`\n--- Importing r/${subreddit} ---\n`)
+
+      const importer = new ContentImporter({
+        platform: 'reddit',
+        sourceIdentifier: subreddit,
+        displayName: `r/${subreddit}`,
+        rateLimiter,
+        dryRun: config.dryRun
+      })
+
+      try {
+        await importer.run(
+          // Fetch function
+          async () => {
+            const posts = await fetchSubreddit(subreddit, config)
+            return posts
+          },
+          // Transform function (async to support URL validation)
+          async (post) => {
+            const content = transformPost(post, subreddit)
+            if (!content) return null
+
+            // Validate the media URL is accessible before importing
+            // This prevents importing deleted Reddit images
+            console.log(`  [Validate] Checking URL: ${content.url.slice(0, 60)}...`)
+            const isValid = await validateImageUrl(content.url)
+
+            if (!isValid) {
+              return null // Skip this post
+            }
+
+            console.log(`  [Valid] URL is accessible`)
+            return content
+          }
+        )
+      } catch (error) {
+        console.error(`[Reddit] Error importing r/${subreddit}:`, error.message)
+      }
     }
   }
 

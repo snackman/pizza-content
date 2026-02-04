@@ -3,17 +3,20 @@
  * DeviantArt Importer
  *
  * Imports pizza art from DeviantArt's API using OAuth2 Client Credentials.
+ * When run with --all-stars flag, searches for content featuring Pizza All Stars.
  *
  * Usage:
  *   SUPABASE_SERVICE_KEY=xxx DEVIANTART_CLIENT_ID=xxx DEVIANTART_CLIENT_SECRET=xxx node scripts/import-deviantart.mjs
  *   SUPABASE_SERVICE_KEY=xxx DEVIANTART_CLIENT_ID=xxx DEVIANTART_CLIENT_SECRET=xxx node scripts/import-deviantart.mjs --tag "pizza"
  *   SUPABASE_SERVICE_KEY=xxx DEVIANTART_CLIENT_ID=xxx DEVIANTART_CLIENT_SECRET=xxx node scripts/import-deviantart.mjs --query "pizza art"
+ *   SUPABASE_SERVICE_KEY=xxx DEVIANTART_CLIENT_ID=xxx DEVIANTART_CLIENT_SECRET=xxx node scripts/import-deviantart.mjs --all-stars
  *
  * Register your app at: https://www.deviantart.com/developers/register
  */
 
 import { ContentImporter } from './lib/content-importer.mjs'
 import { RateLimiter } from './lib/rate-limiter.mjs'
+import { getAllStarsSearchTerms } from './lib/all-stars.mjs'
 
 // Default configuration
 const DEFAULT_TAG = 'pizza'
@@ -30,6 +33,7 @@ function parseArgs() {
     limit: DEFAULT_LIMIT,
     offset: 0,
     matureContent: false,
+    allStars: false,
     dryRun: false
   }
 
@@ -55,6 +59,10 @@ function parseArgs() {
       case '-m':
         config.matureContent = true
         break
+      case '--all-stars':
+      case '-a':
+        config.allStars = true
+        break
       case '--dry-run':
         config.dryRun = true
         break
@@ -72,6 +80,7 @@ Options:
   --limit, -l <n>         Number of items to fetch (default: ${DEFAULT_LIMIT}, max: 60)
   --offset, -o <n>        Offset for pagination (default: 0)
   --mature, -m            Include mature content
+  --all-stars, -a         Search for all Pizza All Stars (from database)
   --dry-run               Show what would be imported without saving
   --help, -h              Show this help message
 
@@ -86,6 +95,7 @@ Examples:
   node scripts/import-deviantart.mjs
   node scripts/import-deviantart.mjs --tag "pizza art" --limit 50
   node scripts/import-deviantart.mjs --query "italian pizza" --offset 24
+  node scripts/import-deviantart.mjs --all-stars --limit 10
 `)
         process.exit(0)
     }
@@ -305,42 +315,87 @@ async function main() {
   }
 
   console.log('\n=== DeviantArt Pizza Art Importer ===\n')
-  console.log(`Mode: ${config.query ? `Query "${config.query}"` : `Tag "${config.tag}"`}`)
-  console.log(`Limit: ${config.limit}, Offset: ${config.offset}`)
-  console.log(`Mature content: ${config.matureContent ? 'Yes' : 'No'}`)
-  if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
 
-  const sourceId = config.query
-    ? `query-${config.query.replace(/\s+/g, '-').toLowerCase()}`
-    : `tag-${config.tag.replace(/\s+/g, '-').toLowerCase()}`
+  // If --all-stars flag, fetch all search terms and run multiple queries
+  if (config.allStars) {
+    console.log('Mode: Pizza All Stars (multiple queries)')
+    console.log(`Limit per query: ${config.limit}`)
+    console.log(`Mature content: ${config.matureContent ? 'Yes' : 'No'}`)
+    if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
 
-  const importer = new ContentImporter({
-    platform: 'deviantart',
-    sourceIdentifier: sourceId,
-    displayName: config.query
-      ? `DeviantArt Query: ${config.query}`
-      : `DeviantArt Tag: ${config.tag}`,
-    // DeviantArt rate limits are not clearly documented,
-    // but we'll be conservative: ~20 requests per minute
-    rateLimiter: new RateLimiter({ requestsPerMinute: 20 }),
-    dryRun: config.dryRun
-  })
+    const searchTerms = await getAllStarsSearchTerms()
+    console.log(`Found ${searchTerms.length} search terms from All Stars\n`)
 
-  try {
     // Get access token first
     const accessToken = await getAccessToken(clientId, clientSecret)
+    const rateLimiter = new RateLimiter({ requestsPerMinute: 20 })
 
-    await importer.run(
-      // Fetch function
-      async () => config.query
-        ? fetchByQuery(accessToken, config)
-        : fetchByTag(accessToken, config),
-      // Transform function
-      transformDeviation
-    )
-  } catch (error) {
-    console.error('[DeviantArt] Error:', error.message)
-    process.exit(1)
+    for (const term of searchTerms) {
+      console.log(`\n--- Searching for "${term}" ---\n`)
+
+      const queryConfig = { ...config, query: term }
+      const sourceId = `query-${term.replace(/\s+/g, '-').toLowerCase()}`
+
+      const importer = new ContentImporter({
+        platform: 'deviantart',
+        sourceIdentifier: sourceId,
+        displayName: `DeviantArt Query: ${term}`,
+        rateLimiter,
+        dryRun: config.dryRun
+      })
+
+      try {
+        await importer.run(
+          async () => fetchByQuery(accessToken, queryConfig),
+          transformDeviation
+        )
+      } catch (error) {
+        console.error(`[DeviantArt] Error for "${term}":`, error.message)
+        // Continue with next term
+      }
+
+      // Small delay between queries
+      await new Promise(r => setTimeout(r, 1000))
+    }
+  } else {
+    // Single query mode
+    console.log(`Mode: ${config.query ? `Query "${config.query}"` : `Tag "${config.tag}"`}`)
+    console.log(`Limit: ${config.limit}, Offset: ${config.offset}`)
+    console.log(`Mature content: ${config.matureContent ? 'Yes' : 'No'}`)
+    if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
+
+    const sourceId = config.query
+      ? `query-${config.query.replace(/\s+/g, '-').toLowerCase()}`
+      : `tag-${config.tag.replace(/\s+/g, '-').toLowerCase()}`
+
+    const importer = new ContentImporter({
+      platform: 'deviantart',
+      sourceIdentifier: sourceId,
+      displayName: config.query
+        ? `DeviantArt Query: ${config.query}`
+        : `DeviantArt Tag: ${config.tag}`,
+      // DeviantArt rate limits are not clearly documented,
+      // but we'll be conservative: ~20 requests per minute
+      rateLimiter: new RateLimiter({ requestsPerMinute: 20 }),
+      dryRun: config.dryRun
+    })
+
+    try {
+      // Get access token first
+      const accessToken = await getAccessToken(clientId, clientSecret)
+
+      await importer.run(
+        // Fetch function
+        async () => config.query
+          ? fetchByQuery(accessToken, config)
+          : fetchByTag(accessToken, config),
+        // Transform function
+        transformDeviation
+      )
+    } catch (error) {
+      console.error('[DeviantArt] Error:', error.message)
+      process.exit(1)
+    }
   }
 
   console.log('\n=== Import Complete ===\n')

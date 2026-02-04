@@ -4,15 +4,18 @@
  *
  * Imports pizza photos and videos from Pexels.
  * All Pexels content is free for commercial use.
+ * When run with --all-stars flag, searches for content featuring Pizza All Stars.
  *
  * Usage:
  *   SUPABASE_SERVICE_KEY=xxx PEXELS_API_KEY=xxx node scripts/import-pexels.mjs
  *   SUPABASE_SERVICE_KEY=xxx PEXELS_API_KEY=xxx node scripts/import-pexels.mjs --query "pizza making"
  *   SUPABASE_SERVICE_KEY=xxx PEXELS_API_KEY=xxx node scripts/import-pexels.mjs --videos
+ *   SUPABASE_SERVICE_KEY=xxx PEXELS_API_KEY=xxx node scripts/import-pexels.mjs --all-stars
  */
 
 import { ContentImporter } from './lib/content-importer.mjs'
 import { RateLimiter } from './lib/rate-limiter.mjs'
+import { getAllStarsSearchTerms } from './lib/all-stars.mjs'
 
 // Default configuration
 const DEFAULT_QUERY = 'pizza'
@@ -29,6 +32,7 @@ function parseArgs() {
     orientation: 'square', // 'landscape', 'portrait', 'square'
     size: 'medium', // 'large', 'medium', 'small'
     page: 1,
+    allStars: false,
     dryRun: false
   }
 
@@ -61,6 +65,10 @@ function parseArgs() {
       case '-p':
         config.page = parseInt(args[++i], 10)
         break
+      case '--all-stars':
+      case '-a':
+        config.allStars = true
+        break
       case '--dry-run':
         config.dryRun = true
         break
@@ -80,6 +88,7 @@ Options:
   --orientation, -o <type>  Orientation: landscape, portrait, square (default: square)
   --size, -s <type>         Size filter: large, medium, small (default: medium)
   --page, -p <n>            Page number for pagination (default: 1)
+  --all-stars, -a           Search for all Pizza All Stars (from database)
   --dry-run                 Show what would be imported without saving
   --help, -h                Show this help message
 
@@ -91,6 +100,7 @@ Examples:
   node scripts/import-pexels.mjs
   node scripts/import-pexels.mjs --query "pizza making" --orientation landscape
   node scripts/import-pexels.mjs --videos --query "pizza cooking"
+  node scripts/import-pexels.mjs --all-stars --limit 10
 `)
         process.exit(0)
     }
@@ -237,33 +247,78 @@ async function main() {
   }
 
   console.log('\n=== Pexels Pizza Importer ===\n')
-  console.log(`Type: ${config.videos ? 'Videos' : 'Photos'}`)
-  console.log(`Query: "${config.query}"`)
-  console.log(`Orientation: ${config.orientation}, Size: ${config.size}, Limit: ${config.limit}`)
-  if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
 
-  const sourceId = `${config.videos ? 'videos' : 'photos'}-${config.query.replace(/\s+/g, '-').toLowerCase()}`
+  // If --all-stars flag, fetch all search terms and run multiple queries
+  if (config.allStars) {
+    console.log('Mode: Pizza All Stars (multiple queries)')
+    console.log(`Type: ${config.videos ? 'Videos' : 'Photos'}`)
+    console.log(`Limit per query: ${config.limit}`)
+    if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
 
-  const importer = new ContentImporter({
-    platform: 'pexels',
-    sourceIdentifier: sourceId,
-    displayName: `Pexels ${config.videos ? 'Videos' : 'Photos'}: ${config.query}`,
-    rateLimiter: new RateLimiter({ requestsPerMinute: 200 }), // Pexels: 200 req/hr
-    dryRun: config.dryRun
-  })
+    const searchTerms = await getAllStarsSearchTerms()
+    console.log(`Found ${searchTerms.length} search terms from All Stars\n`)
 
-  try {
-    await importer.run(
-      // Fetch function
-      async () => config.videos
-        ? fetchPexelsVideos(apiKey, config)
-        : fetchPexelsPhotos(apiKey, config),
-      // Transform function
-      config.videos ? transformVideo : transformPhoto
-    )
-  } catch (error) {
-    console.error('[Pexels] Error:', error.message)
-    process.exit(1)
+    const rateLimiter = new RateLimiter({ requestsPerMinute: 200 })
+
+    for (const term of searchTerms) {
+      console.log(`\n--- Searching for "${term}" ---\n`)
+
+      const queryConfig = { ...config, query: term }
+      const sourceId = `${config.videos ? 'videos' : 'photos'}-${term.replace(/\s+/g, '-').toLowerCase()}`
+
+      const importer = new ContentImporter({
+        platform: 'pexels',
+        sourceIdentifier: sourceId,
+        displayName: `Pexels ${config.videos ? 'Videos' : 'Photos'}: ${term}`,
+        rateLimiter,
+        dryRun: config.dryRun
+      })
+
+      try {
+        await importer.run(
+          async () => config.videos
+            ? fetchPexelsVideos(apiKey, queryConfig)
+            : fetchPexelsPhotos(apiKey, queryConfig),
+          config.videos ? transformVideo : transformPhoto
+        )
+      } catch (error) {
+        console.error(`[Pexels] Error for "${term}":`, error.message)
+        // Continue with next term
+      }
+
+      // Small delay between queries
+      await new Promise(r => setTimeout(r, 1000))
+    }
+  } else {
+    // Single query mode
+    console.log(`Type: ${config.videos ? 'Videos' : 'Photos'}`)
+    console.log(`Query: "${config.query}"`)
+    console.log(`Orientation: ${config.orientation}, Size: ${config.size}, Limit: ${config.limit}`)
+    if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
+
+    const sourceId = `${config.videos ? 'videos' : 'photos'}-${config.query.replace(/\s+/g, '-').toLowerCase()}`
+
+    const importer = new ContentImporter({
+      platform: 'pexels',
+      sourceIdentifier: sourceId,
+      displayName: `Pexels ${config.videos ? 'Videos' : 'Photos'}: ${config.query}`,
+      rateLimiter: new RateLimiter({ requestsPerMinute: 200 }), // Pexels: 200 req/hr
+      dryRun: config.dryRun
+    })
+
+    try {
+      await importer.run(
+        // Fetch function
+        async () => config.videos
+          ? fetchPexelsVideos(apiKey, config)
+          : fetchPexelsPhotos(apiKey, config),
+        // Transform function
+        config.videos ? transformVideo : transformPhoto
+      )
+    } catch (error) {
+      console.error('[Pexels] Error:', error.message)
+      process.exit(1)
+    }
   }
 
   console.log('\n=== Import Complete ===\n')

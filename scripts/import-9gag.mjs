@@ -1,15 +1,18 @@
 #!/usr/bin/env node
 /**
  * 9GAG Scraper - Scrapes pizza content from 9GAG
+ * When run with --all-stars flag, searches for content featuring Pizza All Stars.
  *
  * Usage:
  *   SUPABASE_SERVICE_KEY=xxx node scripts/import-9gag.mjs
  *   SUPABASE_SERVICE_KEY=xxx node scripts/import-9gag.mjs --tag pizza
  *   SUPABASE_SERVICE_KEY=xxx node scripts/import-9gag.mjs --dry-run
+ *   SUPABASE_SERVICE_KEY=xxx node scripts/import-9gag.mjs --all-stars
  */
 
 import { ContentImporter } from './lib/content-importer.mjs'
 import { RateLimiter } from './lib/rate-limiter.mjs'
+import { getAllStarsSearchTerms } from './lib/all-stars.mjs'
 
 const DEFAULT_TAG = 'pizza'
 const DEFAULT_LIMIT = 50
@@ -20,6 +23,7 @@ function parseArgs() {
     tag: DEFAULT_TAG,
     limit: DEFAULT_LIMIT,
     type: 'hot',
+    allStars: false,
     dryRun: false
   }
 
@@ -36,6 +40,10 @@ function parseArgs() {
       case '--type':
         config.type = args[++i]
         break
+      case '--all-stars':
+      case '-a':
+        config.allStars = true
+        break
       case '--dry-run':
         config.dryRun = true
         break
@@ -51,11 +59,17 @@ Options:
   --tag, -t <tag>       Tag to fetch (default: "${DEFAULT_TAG}")
   --limit, -l <n>       Number of posts to fetch (default: ${DEFAULT_LIMIT})
   --type <type>         Post type: hot, trending, fresh (default: hot)
+  --all-stars, -a       Search for all Pizza All Stars (from database)
   --dry-run             Show what would be imported without saving
   --help, -h            Show this help message
 
 Environment:
   SUPABASE_SERVICE_KEY    Required. Supabase service role key.
+
+Examples:
+  node scripts/import-9gag.mjs
+  node scripts/import-9gag.mjs --tag "pepperoni" --limit 25
+  node scripts/import-9gag.mjs --all-stars --limit 10
 `)
         process.exit(0)
     }
@@ -151,28 +165,70 @@ async function main() {
   const config = parseArgs()
 
   console.log('\n=== 9GAG Pizza Scraper ===\n')
-  console.log(`Tag: ${config.tag}, Type: ${config.type}, Limit: ${config.limit}`)
-  if (config.dryRun) console.log('DRY RUN MODE\n')
 
-  const importer = new ContentImporter({
-    platform: '9gag',
-    sourceIdentifier: config.tag,
-    displayName: `9GAG: ${config.tag}`,
-    rateLimiter: new RateLimiter({ requestsPerMinute: 10 }),
-    dryRun: config.dryRun
-  })
+  // If --all-stars flag, fetch all search terms and run multiple queries
+  if (config.allStars) {
+    console.log('Mode: Pizza All Stars (multiple queries)')
+    console.log(`Limit per query: ${config.limit}`)
+    if (config.dryRun) console.log('DRY RUN MODE\n')
 
-  try {
-    await importer.run(
-      async () => {
-        const posts = await fetch9GAGPosts(config.tag, config.type)
-        return posts.slice(0, config.limit)
-      },
-      transformPost
-    )
-  } catch (error) {
-    console.error('[9GAG] Error:', error.message)
-    process.exit(1)
+    const searchTerms = await getAllStarsSearchTerms()
+    console.log(`Found ${searchTerms.length} search terms from All Stars\n`)
+
+    const rateLimiter = new RateLimiter({ requestsPerMinute: 10 })
+
+    for (const term of searchTerms) {
+      console.log(`\n--- Searching for "${term}" ---\n`)
+
+      const importer = new ContentImporter({
+        platform: '9gag',
+        sourceIdentifier: term.replace(/\s+/g, '-').toLowerCase(),
+        displayName: `9GAG: ${term}`,
+        rateLimiter,
+        dryRun: config.dryRun
+      })
+
+      try {
+        await importer.run(
+          async () => {
+            const posts = await fetch9GAGPosts(term, config.type)
+            return posts.slice(0, config.limit)
+          },
+          transformPost
+        )
+      } catch (error) {
+        console.error(`[9GAG] Error for "${term}":`, error.message)
+        // Continue with next term
+      }
+
+      // Small delay between queries
+      await new Promise(r => setTimeout(r, 1000))
+    }
+  } else {
+    // Single query mode
+    console.log(`Tag: ${config.tag}, Type: ${config.type}, Limit: ${config.limit}`)
+    if (config.dryRun) console.log('DRY RUN MODE\n')
+
+    const importer = new ContentImporter({
+      platform: '9gag',
+      sourceIdentifier: config.tag,
+      displayName: `9GAG: ${config.tag}`,
+      rateLimiter: new RateLimiter({ requestsPerMinute: 10 }),
+      dryRun: config.dryRun
+    })
+
+    try {
+      await importer.run(
+        async () => {
+          const posts = await fetch9GAGPosts(config.tag, config.type)
+          return posts.slice(0, config.limit)
+        },
+        transformPost
+      )
+    } catch (error) {
+      console.error('[9GAG] Error:', error.message)
+      process.exit(1)
+    }
   }
 
   console.log('\n=== Scrape Complete ===\n')

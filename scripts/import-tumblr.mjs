@@ -4,11 +4,13 @@
  *
  * Imports pizza-related content from Tumblr (memes, fan art, GIFs, photos).
  * Uses Tumblr's API v2 with API key authentication.
+ * When run with --all-stars flag, searches for content featuring Pizza All Stars.
  *
  * Usage:
  *   SUPABASE_SERVICE_KEY=xxx TUMBLR_API_KEY=xxx node scripts/import-tumblr.mjs
  *   SUPABASE_SERVICE_KEY=xxx TUMBLR_API_KEY=xxx node scripts/import-tumblr.mjs --tag "pizza"
  *   SUPABASE_SERVICE_KEY=xxx TUMBLR_API_KEY=xxx node scripts/import-tumblr.mjs --tag "pizza art" --limit 50
+ *   SUPABASE_SERVICE_KEY=xxx TUMBLR_API_KEY=xxx node scripts/import-tumblr.mjs --all-stars
  *
  * Environment:
  *   TUMBLR_API_KEY       Required. Your Tumblr OAuth Consumer Key (API key).
@@ -18,6 +20,7 @@
 
 import { ContentImporter, detectContentType } from './lib/content-importer.mjs'
 import { RateLimiter } from './lib/rate-limiter.mjs'
+import { getAllStarsSearchTerms } from './lib/all-stars.mjs'
 
 // Default configuration
 const DEFAULT_TAGS = ['pizza', 'pizza meme', 'pizza art', 'pizzatime', 'pizza gif']
@@ -32,6 +35,7 @@ function parseArgs() {
     limit: DEFAULT_LIMIT,
     before: null, // Unix timestamp for pagination
     filter: 'text', // 'text', 'raw', or 'html'
+    allStars: false,
     dryRun: false
   }
 
@@ -56,6 +60,10 @@ function parseArgs() {
       case '-f':
         config.filter = args[++i]
         break
+      case '--all-stars':
+      case '-a':
+        config.allStars = true
+        break
       case '--dry-run':
         config.dryRun = true
         break
@@ -73,6 +81,7 @@ Options:
   --limit, -l <n>       Number of posts to fetch per tag (default: ${DEFAULT_LIMIT})
   --before, -b <ts>     Unix timestamp for pagination (fetch posts before this time)
   --filter, -f <type>   Post format: text, raw, html (default: text)
+  --all-stars, -a       Search for all Pizza All Stars (from database)
   --dry-run             Show what would be imported without saving
   --help, -h            Show this help message
 
@@ -87,6 +96,7 @@ Examples:
   node scripts/import-tumblr.mjs
   node scripts/import-tumblr.mjs --tag "pizza art" --limit 50
   node scripts/import-tumblr.mjs --tags "pizza,pizza meme,pizza gif" --dry-run
+  node scripts/import-tumblr.mjs --all-stars --limit 10
 `)
         process.exit(0)
     }
@@ -342,14 +352,27 @@ async function main() {
   }
 
   console.log('\n=== Tumblr Pizza Importer ===\n')
-  console.log(`Tags: ${config.tags.join(', ')}`)
-  console.log(`Limit per tag: ${config.limit}`)
-  if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
+
+  // If --all-stars flag, fetch all search terms and use those as tags
+  let tagsToSearch = config.tags
+  if (config.allStars) {
+    console.log('Mode: Pizza All Stars (multiple queries)')
+    console.log(`Limit per tag: ${config.limit}`)
+    if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
+
+    const searchTerms = await getAllStarsSearchTerms()
+    console.log(`Found ${searchTerms.length} search terms from All Stars\n`)
+    tagsToSearch = searchTerms
+  } else {
+    console.log(`Tags: ${config.tags.join(', ')}`)
+    console.log(`Limit per tag: ${config.limit}`)
+    if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
+  }
 
   // Tumblr rate limit: ~60 requests per minute, but be conservative
   const rateLimiter = new RateLimiter({ requestsPerMinute: 30 })
 
-  for (const tag of config.tags) {
+  for (const tag of tagsToSearch) {
     console.log(`\n--- Importing tag: "${tag}" ---\n`)
 
     const sourceIdentifier = tag.replace(/\s+/g, '-').toLowerCase()

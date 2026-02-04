@@ -3,15 +3,18 @@
  * Tenor Importer
  *
  * Imports pizza GIFs from Tenor's API (Google-owned).
+ * When run with --all-stars flag, searches for content featuring Pizza All Stars.
  *
  * Usage:
  *   SUPABASE_SERVICE_KEY=xxx TENOR_API_KEY=xxx node scripts/import-tenor.mjs
  *   SUPABASE_SERVICE_KEY=xxx TENOR_API_KEY=xxx node scripts/import-tenor.mjs --query "pizza party"
  *   SUPABASE_SERVICE_KEY=xxx TENOR_API_KEY=xxx node scripts/import-tenor.mjs --featured
+ *   SUPABASE_SERVICE_KEY=xxx TENOR_API_KEY=xxx node scripts/import-tenor.mjs --all-stars
  */
 
 import { ContentImporter } from './lib/content-importer.mjs'
 import { RateLimiter } from './lib/rate-limiter.mjs'
+import { getAllStarsSearchTerms } from './lib/all-stars.mjs'
 
 // Default configuration
 const DEFAULT_QUERY = 'pizza'
@@ -25,6 +28,7 @@ function parseArgs() {
     query: DEFAULT_QUERY,
     limit: DEFAULT_LIMIT,
     featured: false,
+    allStars: false,
     dryRun: false,
     pos: '' // Position for pagination
   }
@@ -47,6 +51,10 @@ function parseArgs() {
       case '-f':
         config.featured = true
         break
+      case '--all-stars':
+      case '-a':
+        config.allStars = true
+        break
       case '--dry-run':
         config.dryRun = true
         break
@@ -63,6 +71,7 @@ Options:
   --limit, -l <n>         Number of GIFs to fetch (default: ${DEFAULT_LIMIT}, max: 50)
   --pos, -p <position>    Position for pagination
   --featured, -f          Fetch featured GIFs instead of searching
+  --all-stars, -a         Search for all Pizza All Stars (from database)
   --dry-run               Show what would be imported without saving
   --help, -h              Show this help message
 
@@ -74,6 +83,7 @@ Examples:
   node scripts/import-tenor.mjs
   node scripts/import-tenor.mjs --query "pizza party" --limit 25
   node scripts/import-tenor.mjs --featured
+  node scripts/import-tenor.mjs --all-stars --limit 10
 `)
         process.exit(0)
     }
@@ -172,30 +182,72 @@ async function main() {
   }
 
   console.log('\n=== Tenor Pizza Importer ===\n')
-  console.log(`Mode: ${config.featured ? 'Featured' : `Search "${config.query}"`}`)
-  console.log(`Limit: ${config.limit}`)
-  if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
 
-  const sourceId = config.featured ? 'featured' : config.query.replace(/\s+/g, '-').toLowerCase()
+  // If --all-stars flag, fetch all search terms and run multiple queries
+  if (config.allStars) {
+    console.log('Mode: Pizza All Stars (multiple queries)')
+    console.log(`Limit per query: ${config.limit}`)
+    if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
 
-  const importer = new ContentImporter({
-    platform: 'tenor',
-    sourceIdentifier: sourceId,
-    displayName: config.featured ? 'Tenor Featured' : `Tenor: ${config.query}`,
-    rateLimiter: new RateLimiter({ requestsPerMinute: 30 }),
-    dryRun: config.dryRun
-  })
+    const searchTerms = await getAllStarsSearchTerms()
+    console.log(`Found ${searchTerms.length} search terms from All Stars\n`)
 
-  try {
-    await importer.run(
-      // Fetch function
-      async () => fetchTenor(apiKey, config),
-      // Transform function
-      transformGif
-    )
-  } catch (error) {
-    console.error('[Tenor] Error:', error.message)
-    process.exit(1)
+    const rateLimiter = new RateLimiter({ requestsPerMinute: 30 })
+
+    for (const term of searchTerms) {
+      console.log(`\n--- Searching for "${term}" ---\n`)
+
+      const queryConfig = { ...config, query: term }
+      const sourceId = term.replace(/\s+/g, '-').toLowerCase()
+
+      const importer = new ContentImporter({
+        platform: 'tenor',
+        sourceIdentifier: sourceId,
+        displayName: `Tenor: ${term}`,
+        rateLimiter,
+        dryRun: config.dryRun
+      })
+
+      try {
+        await importer.run(
+          async () => fetchTenor(apiKey, queryConfig),
+          transformGif
+        )
+      } catch (error) {
+        console.error(`[Tenor] Error for "${term}":`, error.message)
+        // Continue with next term
+      }
+
+      // Small delay between queries
+      await new Promise(r => setTimeout(r, 1000))
+    }
+  } else {
+    // Single query mode
+    console.log(`Mode: ${config.featured ? 'Featured' : `Search "${config.query}"`}`)
+    console.log(`Limit: ${config.limit}`)
+    if (config.dryRun) console.log('DRY RUN MODE - No data will be saved\n')
+
+    const sourceId = config.featured ? 'featured' : config.query.replace(/\s+/g, '-').toLowerCase()
+
+    const importer = new ContentImporter({
+      platform: 'tenor',
+      sourceIdentifier: sourceId,
+      displayName: config.featured ? 'Tenor Featured' : `Tenor: ${config.query}`,
+      rateLimiter: new RateLimiter({ requestsPerMinute: 30 }),
+      dryRun: config.dryRun
+    })
+
+    try {
+      await importer.run(
+        // Fetch function
+        async () => fetchTenor(apiKey, config),
+        // Transform function
+        transformGif
+      )
+    } catch (error) {
+      console.error('[Tenor] Error:', error.message)
+      process.exit(1)
+    }
   }
 
   console.log('\n=== Import Complete ===\n')
