@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useAuth } from '@/hooks/useAuth'
 import { PizzeriaBadge } from '@/components/ui/PizzeriaBadge'
 
@@ -13,7 +14,13 @@ export function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl">🍕</span>
+            <Image
+              src="/logo.png"
+              alt="Pizza Sauce"
+              width={40}
+              height={40}
+              className="rounded-full"
+            />
             <span className="font-bold text-xl text-gray-900">Pizza Sauce</span>
           </Link>
 
