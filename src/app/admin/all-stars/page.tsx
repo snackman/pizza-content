@@ -49,7 +49,7 @@ export default function AdminAllStarsPage() {
         .order('name', { ascending: true })
 
       if (fetchError) throw fetchError
-      setAllStars((data as AllStar[]) || [])
+      setAllStars((data as unknown as AllStar[]) || [])
     } catch (err) {
       console.error('Error fetching all stars:', err)
       setError(err instanceof Error ? err.message : 'Failed to load all stars')
