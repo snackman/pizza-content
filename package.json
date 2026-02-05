@@ -26,7 +26,8 @@
     "import-deviantart": "node scripts/import-deviantart.mjs",
     "import-tiktok": "node scripts/import-tiktok.mjs",
     "import-tumblr": "node scripts/import-tumblr.mjs",
-    "check-links": "node scripts/check-broken-links.mjs"
+    "detect-broken": "node scripts/detect-broken-images.mjs",
+    "detect-broken:fix": "node scripts/detect-broken-images.mjs --fix"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
