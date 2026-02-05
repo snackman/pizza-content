@@ -58,7 +58,7 @@ export default function HomePage() {
               alt="Pizza Sauce"
               width={120}
               height={120}
-              className="rounded-full shadow-2xl"
+              className="shadow-2xl"
               priority
             />
             <h1 className="text-5xl md:text-6xl font-bold">
