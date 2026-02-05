@@ -13,15 +13,15 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-3">
             <Image
               src="/logo.png"
               alt="Pizza Sauce"
-              width={40}
-              height={40}
+              width={80}
+              height={80}
               className="rounded-full"
             />
-            <span className="font-bold text-xl text-gray-900">Pizza Sauce</span>
+            <span className="font-bold text-2xl text-gray-900">Pizza Sauce</span>
           </Link>
 
           {/* Navigation */}

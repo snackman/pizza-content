@@ -52,19 +52,19 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-orange-500 to-red-600 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex justify-center mb-6">
+          <div className="flex items-center justify-center gap-6 mb-6">
             <Image
               src="/logo.png"
               alt="Pizza Sauce"
-              width={180}
-              height={180}
+              width={120}
+              height={120}
               className="rounded-full shadow-2xl"
               priority
             />
+            <h1 className="text-5xl md:text-6xl font-bold">
+              Pizza Sauce
+            </h1>
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            Pizza Sauce
-          </h1>
           <p className="text-xl md:text-2xl text-orange-100 mb-8 max-w-2xl mx-auto">
             The ultimate repository for pizza GIFs, memes, and viral videos.
             Find the perfect slice of content.
