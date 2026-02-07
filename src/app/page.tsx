@@ -56,9 +56,8 @@ export default function HomePage() {
             <Image
               src="/logo.png"
               alt="Pizza Sauce"
-              width={120}
-              height={120}
-              className="shadow-2xl"
+              width={180}
+              height={180}
               priority
             />
             <h1 className="text-5xl md:text-6xl font-bold">
