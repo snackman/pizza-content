@@ -1,203 +1,196 @@
 # Pizza Sauce - Session Handoff
 
-## Session Summary (Feb 5, 2026)
+## Session 2 Summary (Feb 7, 2026)
 
 ### Major Accomplishments
 
-1. **Massive Content Import** - Added 740+ new items, total now **1,921 approved**
-2. **Pizza All Stars Feature** - Created database, UI, voting, and submission system
-3. **Fixed Broken Reddit Content** - Validated URLs individually, restored 417 working items
-4. **Added Logo & Favicon** - New pizza sauce swirl branding
-5. **Set Up All API Keys** - 8 keys configured in `.env.local`
-6. **Import Scripts Enhanced** - All scripts now support `--all-stars` flag
+1. **Logo & Favicon Overhaul**
+   - Made logo background **transparent** (removed visible white square)
+   - Hero logo **1.5x larger** (180px), inline with title
+   - Header logo **2x larger** (80px)
+   - Favicon **cropped to center** for larger icon
+   - Fixed: `src/app/favicon.ico` overriding `public/favicon.ico`
+
+2. **New Content Sources**
+   - **Flickr** importer added (needs `FLICKR_API_KEY`)
+   - **Imgflip** importer added (no API key needed)
+   - Imported **20 meme templates** from Imgflip
+
+3. **Broken Content Cleanup**
+   - **Pixabay**: All 175 items disabled (403 errors)
+   - **Pexels**: 40 items flagged as broken
+   - Ran broken image detector across all sources
+
+4. **Bug Fixes**
+   - Fixed keyboard shortcuts overlapping source link on `/live` page
+   - Fixed TypeScript error in admin all-stars page
+
+5. **All Stars Updates**
+   - Added **Scott Wiener** as 12th All Star
+   - Updated all image URLs with verified working sources
+
+6. **DeviantArt Account Suspended**
+   - Suspended for "spamming" despite using official OAuth2 API
+   - Recommendation: Don't use DeviantArt
 
 ---
 
-### Content Database Status (1,921 items)
+## Content Database Status
 
-#### By Type
-| Type | Count |
-|------|-------|
-| photo | ~600 |
-| gif | ~500 |
-| video | ~300 |
-| meme | ~300 |
-| music | ~240 |
-| game | ~50 |
-| art | ~30 |
-
-#### By Source
+### By Source (Approved Only)
 | Source | Count |
 |--------|-------|
-| Reddit | 415 |
-| Giphy | 326 |
+| Reddit | 414 |
+| Giphy | 317 |
 | Google Drive | 237 |
-| Pexels | 232 |
+| Pexels | 191 |
 | YouTube | 184 |
-| Pixabay | 178 |
 | Tumblr | 83 |
-| Unsplash | 67 |
-| 9gag | 60 |
-| RAWG | 40 |
+| Unsplash | 65 |
+| RAWG (Games) | 40 |
 | Tenor | 33 |
+| Imgflip | 20 |
 | DeviantArt | 19 |
-| Wikimedia | 12 |
+| 9gag | 11 |
 | Steam | 6 |
+| Wikimedia | 2 |
+| **Total** | **~1,651** |
+
+### Disabled Sources
+| Source | Status | Reason |
+|--------|--------|--------|
+| Pixabay | 175 flagged | 403 errors |
+| Pexels (partial) | 40 flagged | 403 errors |
+| 9gag (partial) | 49 flagged | Broken URLs |
+| Reddit (partial) | 230 flagged | Broken URLs |
+
+### Flagged Content Summary
+| Status | Count |
+|--------|-------|
+| flagged_broken | ~508 |
+| flagged_not_pizza | 14 |
+| rejected | 55 |
 
 ---
 
-### Pizza All Stars (11 entries)
+## Pizza All Stars (12 entries)
 
-| Name | Instagram | Has Photo |
-|------|-----------|-----------|
-| Luigi Primo | @luigiprimopwr | Yes |
-| Tony Gemignani | @capopizza | Yes |
-| Pizza Man Nick | @pizzamannickdiesslin | Yes |
-| Jersey Pizza Boys | @jersey_pizza_boys | Yes |
-| Juan Hermosillo | @juanhermosillo | Yes |
-| Eric John | @ericjohnpizzaart | Yes |
-| Scott Wiener (Pizza Collection) | @pizzacollection | Yes |
-| NYC Sign Spinner | @sign_spinner | Yes |
-| Tony Pepperoni | @tonypepperonicomedy | Yes |
-| Mike Bausch | @mikeybausch | Yes |
-| Sanctuary Pizza | @sanctuary_pizza | Yes |
-
-**Features:**
-- Upvote/downvote system
-- User submissions (pending review)
-- Profile photos from web sources
-- Admin management at `/admin/all-stars`
+| Name | Instagram | Image Status |
+|------|-----------|--------------|
+| Luigi Primo | @luigiprimopwr | ✅ Working |
+| Tony Gemignani | @capopizza | ✅ Working |
+| Scott Wiener | @scottspizzatours | ✅ Working (NEW) |
+| Pizza Man Nick | @pizzamannickdiesslin | ✅ Working |
+| Jersey Pizza Boys | @jersey_pizza_boys | ✅ Working |
+| Juan Hermosillo | @juanhermosillo | ✅ Working |
+| Eric John | @ericjohnpizzaart | ✅ Working |
+| Pizza Collection | @pizzacollection | ✅ Working |
+| NYC Sign Spinner | @sign_spinner | ✅ Working |
+| Tony Pepperoni | @tonypepperonicomedy | ✅ Working |
+| Mike Bausch | @mikeybausch | ✅ Working |
+| Sanctuary Pizza | @sanctuary_pizza | ✅ Working |
 
 ---
 
-### API Keys Status
+## API Keys Status
 
-**Configured in `.env.local`:**
-| Key | Status |
-|-----|--------|
-| SUPABASE_SERVICE_KEY | ✅ Set |
-| GIPHY_API_KEY | ✅ Set |
-| YOUTUBE_API_KEY | ✅ Set |
-| PEXELS_API_KEY | ✅ Set |
-| UNSPLASH_ACCESS_KEY | ⚠️ Invalid (needs refresh) |
-| TUMBLR_API_KEY | ✅ Set |
-| RAWG_API_KEY | ✅ Set |
-| PIXABAY_API_KEY | ✅ Set |
-
-**Not configured:**
-- TENOR_API_KEY
-- DEVIANTART_CLIENT_ID / SECRET
-- IMGUR_CLIENT_ID (registration closed)
-- RAPIDAPI_KEY (for TikTok)
+| Service | Status | Notes |
+|---------|--------|-------|
+| Supabase | ✅ Configured | Service key working |
+| Giphy | ✅ Configured | Working |
+| YouTube | ✅ Configured | Working |
+| Tumblr | ✅ Configured | Working |
+| RAWG | ✅ Configured | Working |
+| Pexels | ⚠️ Broken | 403 errors, disabled |
+| Pixabay | ⚠️ Broken | 403 errors, disabled |
+| Unsplash | ⚠️ Invalid | Needs refresh |
+| Tenor | ❌ Not configured | Needs API key |
+| Flickr | ❌ Not configured | Needs API key (free) |
+| TikTok (RapidAPI) | ✅ Have key | `b663037e53mshd50c612a6368f73p1bc9f8jsnbc38745ade0e` - not integrated |
+| DeviantArt | ❌ Suspended | Account banned |
 
 ---
 
-### Database Functions
+## Import Scripts
 
-| Function | Description |
-|----------|-------------|
-| `vote_content(p_content_id, p_vote_type)` | Vote on content (SECURITY DEFINER) |
-| `flag_content(p_content_id)` | Flag content as not pizza (SECURITY DEFINER) |
-| `vote_all_star(p_all_star_id, p_vote_type)` | Vote on all stars (SECURITY DEFINER) |
+```bash
+# Working (no issues)
+npm run import-giphy
+npm run import-reddit
+npm run import-youtube
+npm run import-tumblr
+npm run import-imgflip      # NEW - no API key needed
+npm run import-9gag
+
+# Need API keys
+npm run import-flickr       # NEW - needs FLICKR_API_KEY
+npm run import-tenor        # needs TENOR_API_KEY
+npm run import-unsplash     # key invalid
+
+# Disabled (broken)
+npm run import-pexels       # 403 errors
+npm run import-pixabay      # 403 errors
+
+# Utilities
+npm run detect-broken       # Find broken images
+npm run detect-broken:fix   # Re-check flagged items
+```
 
 ---
 
-### Key URLs
+## Key Files Changed (Session 2)
+
+| File | Changes |
+|------|---------|
+| `public/logo.png` | Transparent background |
+| `src/app/favicon.ico` | Cropped, transparent |
+| `public/favicon-*.png` | Regenerated from cropped logo |
+| `src/app/page.tsx` | Hero logo 180px, inline with title |
+| `src/components/layout/Header.tsx` | Logo 80px |
+| `src/components/live/LiveStreamPlayer.tsx` | Fixed keyboard shortcuts position |
+| `scripts/import-flickr.mjs` | NEW - Flickr importer |
+| `scripts/import-imgflip.mjs` | NEW - Imgflip importer |
+| `tests/hero-logo.spec.ts` | NEW - Playwright test |
+| `package.json` | Added new import scripts |
+
+---
+
+## Key URLs
 
 | URL | Description |
 |-----|-------------|
 | https://pizzasauce.xyz | Production site |
 | https://pizzasauce.xyz/live | Livestream with voting |
 | https://pizzasauce.xyz/all-stars | Pizza All Stars |
-| https://pizzasauce.xyz/browse | Content browser |
-| https://pizzasauce.xyz/admin | Admin dashboard |
-| https://pizzasauce.xyz/admin/all-stars | All Stars photo management |
+| https://pizzasauce.xyz/admin/all-stars | All Stars admin |
 
 ---
 
-### Key Files Changed This Session
-
-| File | Changes |
-|------|---------|
-| `public/logo.png` | New pizza sauce logo |
-| `public/favicon.ico` | New favicon |
-| `src/app/layout.tsx` | Added favicon metadata |
-| `src/components/layout/Header.tsx` | Logo image, All Stars nav link |
-| `src/app/all-stars/page.tsx` | New All Stars page |
-| `src/app/api/all-stars/*` | All Stars API routes |
-| `src/app/admin/all-stars/page.tsx` | Admin photo upload |
-| `scripts/lib/all-stars.mjs` | All Stars search terms helper |
-| `scripts/import-*.mjs` | Added --all-stars flag to all scripts |
-| `scripts/validate-reddit-urls.mjs` | Reddit URL validator |
-
----
-
-### Import Scripts
-
-All scripts support `--all-stars` flag to search for Pizza All Stars content:
-
-```bash
-# Example usage
-node scripts/import-giphy.mjs --all-stars --limit 20
-node scripts/import-youtube.mjs --all-stars --limit 25
-node scripts/import-pexels.mjs --all-stars --limit 50
-```
-
-**No API key required:**
-- import-reddit.mjs
-- import-9gag.mjs
-- import-archive.mjs
-- import-dribbble.mjs
-- import-pinterest.mjs
-
----
-
-### Git Status
-
-- **Branch**: main
-- **Latest commits**:
-  - `a0fb4bf` feat: Add Pizza Sauce logo and favicon
-  - `c9ebda7` feat: Add admin interface for All Stars photo uploads
-  - `07940c7` feat: Add --all-stars flag to all import scripts
-  - `9fc2b85` feat: Add Pizza All Stars integration to import scripts
-
----
-
-### Environment Variables Template
-
-```bash
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=https://hecsxlqeviirichoohkl.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...
-SUPABASE_SERVICE_KEY=eyJhbGci...
-
-# Import APIs
-GIPHY_API_KEY=your_key
-YOUTUBE_API_KEY=your_key
-PEXELS_API_KEY=your_key
-UNSPLASH_ACCESS_KEY=your_key
-TUMBLR_API_KEY=your_key
-RAWG_API_KEY=your_key
-PIXABAY_API_KEY=your_key
-TENOR_API_KEY=your_key
-```
-
----
-
-### Database
+## Database Info
 
 - **Project ID**: hecsxlqeviirichoohkl
-- **MCP**: supabase-pizzacontent
-- **Tables**: content, pizza_all_stars, profiles, favorites, view_history, etc.
-- **Content status enum**: pending, approved, rejected, featured, flagged_not_pizza, flagged_broken
-- **Content type enum**: gif, meme, video, music, photo, art, game
+- **MCP**: `mcp__supabase-pizzacontent__*`
+- **Tables**: content, pizza_all_stars, profiles, favorites, view_history
 
 ---
 
-### Next Steps
+## Next Steps
 
-1. **Refresh Unsplash API key** - Current one is invalid
-2. **Get Tenor API key** - Easy signup, Google login
-3. **Import more content** - Run scripts with `--all-stars` flag
-4. **Review flagged content** - 278 Reddit items flagged as broken
-5. **Verify All Stars photos** - Some URLs may need updating
+1. **Get Flickr API key** - Free at https://www.flickr.com/services/api/misc.api_keys.html
+2. **Integrate TikTok** - Have RapidAPI key, need to write importer
+3. **Get Tenor API key** - For more GIFs
+4. **Refresh Unsplash API key** - Current returns 401
+5. **Clean up flagged content** - 508 broken items
+6. **Remove DeviantArt content** - Account suspended
+
+---
+
+## Git Status
+
+**Branch**: main
+**Latest commits**:
+- `ff84d6a` fix: Move keyboard shortcuts below source link on /live page
+- `d925500` feat: Add Flickr and Imgflip import scripts
+- `3d9111c` fix: Make favicon icon larger by cropping to center
+- `2969f68` fix: Update app favicon to match transparent logo
+- `929f0db` fix: Make logo background transparent, increase hero logo size
