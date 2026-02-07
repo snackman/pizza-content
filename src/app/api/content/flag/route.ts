@@ -3,6 +3,13 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient()
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'You must be logged in to flag content.' }, { status: 401 })
+    }
+
     const { contentId } = await request.json()
 
     if (!contentId) {
@@ -12,10 +19,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = await createClient()
-
-    // Use flag_content RPC function to bypass RLS
-    // Cast to any since TypeScript types may not include this function yet
     const { error } = await supabase
       .rpc('flag_content' as any, {
         p_content_id: contentId,

@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { PizzaAllStar } from '@/types/all-stars'
 import { AllStarCard } from '@/components/all-stars/AllStarCard'
 import { SubmitAllStarForm } from '@/components/all-stars/SubmitAllStarForm'
+import { useAllStarVotes } from '@/hooks/useVotes'
+import { useAuth } from '@/hooks/useAuth'
 
 type SortOption = 'upvotes' | 'alphabetical'
 
@@ -14,6 +16,9 @@ export default function AllStarsPage() {
   const [sortBy, setSortBy] = useState<SortOption>('upvotes')
   const [showSubmitForm, setShowSubmitForm] = useState(false)
 
+  const { getUserVote, fetchVotesForIds } = useAllStarVotes()
+  const { isAuthenticated } = useAuth()
+
   const fetchAllStars = async () => {
     try {
       const response = await fetch('/api/all-stars')
@@ -22,17 +27,53 @@ export default function AllStarsPage() {
       }
       const data = await response.json()
       setAllStars(data)
+      return data as PizzaAllStar[]
     } catch (err) {
       console.error('Error fetching all stars:', err)
       setError(err instanceof Error ? err.message : 'Failed to load all stars')
+      return []
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchAllStars()
-  }, [])
+    fetchAllStars().then((data) => {
+      if (isAuthenticated && data.length > 0) {
+        fetchVotesForIds(data.map((s: PizzaAllStar) => s.id))
+      }
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-fetch votes when auth state changes
+  useEffect(() => {
+    if (isAuthenticated && allStars.length > 0) {
+      fetchVotesForIds(allStars.map((s) => s.id))
+    }
+  }, [isAuthenticated]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleVote = useCallback(async (allStarId: string, voteType: 'up' | 'down') => {
+    const response = await fetch('/api/all-stars/vote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ allStarId, vote: voteType }),
+    })
+    if (response.ok) {
+      const data = await response.json()
+      // Update local state with new counts
+      setAllStars((prev) =>
+        prev.map((s) =>
+          s.id === allStarId ? { ...s, upvotes: data.upvotes, downvotes: data.downvotes } : s
+        )
+      )
+      // Re-fetch votes to update the user's vote state
+      if (isAuthenticated) {
+        fetchVotesForIds(allStars.map((s) => s.id))
+      }
+      return { upvotes: data.upvotes, downvotes: data.downvotes }
+    }
+    return null
+  }, [allStars, isAuthenticated, fetchVotesForIds])
 
   const sortedAllStars = [...allStars].sort((a, b) => {
     if (sortBy === 'upvotes') {
@@ -137,7 +178,12 @@ export default function AllStarsPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {sortedAllStars.map((allStar) => (
-              <AllStarCard key={allStar.id} allStar={allStar} />
+              <AllStarCard
+                key={allStar.id}
+                allStar={allStar}
+                userVote={getUserVote(allStar.id)}
+                onVote={(voteType) => handleVote(allStar.id, voteType)}
+              />
             ))}
           </div>
         )}

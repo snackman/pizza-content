@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Content } from '@/types/database'
 import { ContentCard } from '@/components/content/ContentCard'
+import { useContentVotes } from '@/hooks/useVotes'
+import { useAuth } from '@/hooks/useAuth'
 
 type ContentType = 'all' | 'gif' | 'meme' | 'video' | 'music' | 'photo' | 'art' | 'game'
 
@@ -22,6 +24,9 @@ export default function BrowsePage() {
 
   const sentinelRef = useRef<HTMLDivElement>(null)
   const supabase = useMemo(() => createClient(), [])
+
+  const { getUserVote, fetchVotesForIds } = useContentVotes()
+  const { isAuthenticated } = useAuth()
 
   const fetchContent = useCallback(async (pageNum: number, reset: boolean = false) => {
     if (reset) {
@@ -50,17 +55,25 @@ export default function BrowsePage() {
       console.error('Error fetching content:', error)
     } else {
       const newItems = data || []
+      let allContent: Content[]
       if (reset) {
+        allContent = newItems
         setContent(newItems)
       } else {
-        setContent(prev => [...prev, ...newItems])
+        allContent = [...content, ...newItems]
+        setContent(allContent)
       }
       setHasMore(newItems.length === ITEMS_PER_PAGE)
+
+      // Fetch votes for the new items
+      if (isAuthenticated && newItems.length > 0) {
+        fetchVotesForIds(allContent.map((c) => c.id))
+      }
     }
 
     setIsLoading(false)
     setIsLoadingMore(false)
-  }, [filter, supabase])
+  }, [filter, supabase, content, isAuthenticated, fetchVotesForIds])
 
   // Fetch total count
   const fetchTotalCount = useCallback(async () => {
@@ -83,7 +96,14 @@ export default function BrowsePage() {
     setHasMore(true)
     fetchContent(0, true)
     fetchTotalCount()
-  }, [filter, fetchContent, fetchTotalCount])
+  }, [filter]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-fetch votes when auth state changes
+  useEffect(() => {
+    if (isAuthenticated && content.length > 0) {
+      fetchVotesForIds(content.map((c) => c.id))
+    }
+  }, [isAuthenticated]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
@@ -106,6 +126,29 @@ export default function BrowsePage() {
     observer.observe(sentinel)
     return () => observer.disconnect()
   }, [hasMore, isLoading, isLoadingMore, fetchContent])
+
+  const handleVote = useCallback(async (contentId: string, voteType: 'up' | 'down') => {
+    const response = await fetch('/api/content/vote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contentId, vote: voteType }),
+    })
+    if (response.ok) {
+      const data = await response.json()
+      // Update local state with new counts
+      setContent((prev) =>
+        prev.map((c) =>
+          c.id === contentId ? { ...c, upvotes: data.upvotes, downvotes: data.downvotes } : c
+        )
+      )
+      // Re-fetch votes to update user's vote state
+      if (isAuthenticated) {
+        fetchVotesForIds(content.map((c) => c.id))
+      }
+      return { upvotes: data.upvotes, downvotes: data.downvotes }
+    }
+    return null
+  }, [content, isAuthenticated, fetchVotesForIds])
 
   const filteredContent = content.filter((item) => {
     if (!searchQuery) return true
@@ -183,7 +226,14 @@ export default function BrowsePage() {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {filteredContent.map((item) => (
-                <ContentCard key={item.id} item={item} showType />
+                <ContentCard
+                  key={item.id}
+                  item={item}
+                  showType
+                  showVoting
+                  userVote={getUserVote(item.id)}
+                  onVote={(voteType) => handleVote(item.id, voteType)}
+                />
               ))}
             </div>
 
