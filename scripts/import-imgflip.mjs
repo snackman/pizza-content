@@ -182,14 +182,10 @@ async function importMemes(memes, config) {
       title: meme.name || 'Imgflip Pizza Meme',
       url: meme.url,
       thumbnail_url: meme.url,
-      source_url: `https://imgflip.com/i/${meme.id}`,
+      source_url: `https://imgflip.com/meme/${meme.id}`,
       source_platform: 'imgflip',
       type: 'meme',
       status: 'approved',
-      metadata: {
-        imgflip_id: meme.id,
-        box_count: meme.box_count,
-      }
     }
 
     if (config.dryRun) {
@@ -211,6 +207,31 @@ async function importMemes(memes, config) {
   return { imported, skipped, failed }
 }
 
+async function fetchPopularMemeTemplates() {
+  // Use Imgflip's official API to get popular meme templates
+  const response = await fetch('https://api.imgflip.com/get_memes')
+  const data = await response.json()
+
+  if (!data.success) {
+    throw new Error('Failed to fetch meme templates')
+  }
+
+  // Filter for pizza-related memes or just get popular ones we can use
+  const pizzaKeywords = ['pizza', 'food', 'italian', 'eat', 'hungry', 'dinner', 'lunch']
+
+  const allMemes = data.data.memes
+
+  // Get pizza-related templates
+  const pizzaMemes = allMemes.filter(m =>
+    pizzaKeywords.some(keyword => m.name.toLowerCase().includes(keyword))
+  )
+
+  // Also include some popular templates that could be used for pizza memes
+  const popularMemes = allMemes.slice(0, 50)
+
+  return [...pizzaMemes, ...popularMemes.slice(0, 20)]
+}
+
 async function main() {
   const config = parseArgs()
 
@@ -221,17 +242,35 @@ async function main() {
     console.log('🔍 DRY RUN - No changes will be made\n')
   }
 
-  const searchTerms = [
-    'pizza',
-    'pizza delivery',
-    'pizza party',
-    'pepperoni',
-    'italian food pizza',
-  ]
-
   let totalImported = 0
   let totalSkipped = 0
   let totalFailed = 0
+
+  try {
+    // First, get meme templates from official API
+    console.log('\n📋 Fetching popular meme templates from Imgflip API...')
+    const templates = await fetchPopularMemeTemplates()
+    console.log(`   Found ${templates.length} meme templates`)
+
+    const memes = templates.map(t => ({
+      id: t.id,
+      url: t.url,
+      name: t.name,
+      box_count: t.box_count,
+    }))
+
+    const { imported, skipped, failed } = await importMemes(memes.slice(0, config.limit), config)
+    totalImported += imported
+    totalSkipped += skipped
+    totalFailed += failed
+    console.log(`   ✅ Imported: ${imported}, Skipped: ${skipped}, Failed: ${failed}`)
+
+  } catch (error) {
+    console.error(`   ❌ Error: ${error.message}`)
+  }
+
+  // Now try scraping search results
+  const searchTerms = ['pizza', 'pizza meme']
 
   for (const term of searchTerms) {
     console.log(`\n🔍 Searching for "${term}"...`)
@@ -240,19 +279,7 @@ async function main() {
       const memes = await fetchHotMemes(term)
       console.log(`   Found ${memes.length} memes`)
 
-      if (memes.length === 0) {
-        console.log('   Trying alternative search...')
-        const altMemes = await searchImgflip(term, config.limit)
-        console.log(`   Found ${altMemes.length} memes from alternative search`)
-
-        if (altMemes.length > 0) {
-          const { imported, skipped, failed } = await importMemes(altMemes.slice(0, config.limit), config)
-          totalImported += imported
-          totalSkipped += skipped
-          totalFailed += failed
-          console.log(`   ✅ Imported: ${imported}, Skipped: ${skipped}, Failed: ${failed}`)
-        }
-      } else {
+      if (memes.length > 0) {
         const { imported, skipped, failed } = await importMemes(memes.slice(0, config.limit), config)
         totalImported += imported
         totalSkipped += skipped
@@ -260,7 +287,6 @@ async function main() {
         console.log(`   ✅ Imported: ${imported}, Skipped: ${skipped}, Failed: ${failed}`)
       }
 
-      // Rate limiting
       await new Promise(r => setTimeout(r, 1000))
     } catch (error) {
       console.error(`   ❌ Error: ${error.message}`)

@@ -273,7 +273,7 @@ export function LiveStreamPlayer({ initialSettings }: LiveStreamPlayerProps) {
 
       {/* Keyboard shortcuts hint (only shown when paused) */}
       {!isPlaying && controlsVisible && (
-        <div className="absolute top-4 left-4 bg-black/60 rounded-lg p-3 text-white/70 text-sm z-10">
+        <div className="absolute top-16 left-4 bg-black/60 rounded-lg p-3 text-white/70 text-sm z-10">
           <p className="font-medium text-white mb-2">Keyboard Shortcuts</p>
           <ul className="space-y-1">
             <li>
