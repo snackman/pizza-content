@@ -112,7 +112,6 @@ export function useAuth() {
       email,
       password,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/callback`,
         data: {
           display_name: displayName,
         },
