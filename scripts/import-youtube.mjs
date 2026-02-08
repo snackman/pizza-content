@@ -184,6 +184,7 @@ function transformVideo(video) {
     source_url: `https://www.youtube.com/watch?v=${videoId}`,
     source_platform: 'youtube',
     description: description || null,
+    creator: snippet.channelTitle || null,
     is_viral: false, // Would need separate API call to get view count
     // Metadata for tagging
     _channelTitle: snippet.channelTitle,

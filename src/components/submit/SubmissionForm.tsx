@@ -22,6 +22,7 @@ export function SubmissionForm() {
   const [sourceType, setSourceType] = useState<SourceType>('file')
   const [contentType, setContentType] = useState<ContentType>('gif')
   const [title, setTitle] = useState('')
+  const [creator, setCreator] = useState('')
   const [description, setDescription] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [url, setUrl] = useState('')
@@ -103,6 +104,7 @@ export function SubmissionForm() {
       const insertData = {
         type: contentType,
         title: title.trim(),
+        creator: creator.trim() || null,
         description: description.trim() || null,
         url: finalUrl,
         thumbnail_url: thumbnailUrl,
@@ -151,6 +153,7 @@ export function SubmissionForm() {
               onClick={() => {
                 setSuccess(false)
                 setTitle('')
+                setCreator('')
                 setDescription('')
                 setFile(null)
                 setUrl('')
@@ -235,6 +238,23 @@ export function SubmissionForm() {
               required
             />
             <p className="mt-1 text-sm text-gray-500">{title.length}/100 characters</p>
+          </div>
+
+          {/* Creator */}
+          <div className="mb-6">
+            <label htmlFor="creator" className="block text-sm font-medium text-gray-700 mb-1">
+              Creator <span className="text-gray-400">(optional)</span>
+            </label>
+            <input
+              id="creator"
+              type="text"
+              value={creator}
+              onChange={(e) => setCreator(e.target.value)}
+              disabled={isSubmitting}
+              maxLength={100}
+              placeholder="Who created this content?"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50"
+            />
           </div>
 
           {/* Description */}

@@ -19,6 +19,7 @@ export type Database = {
           album: string | null
           artist: string | null
           created_at: string | null
+          creator: string | null
           description: string | null
           downvotes: number | null
           duration_seconds: number | null
@@ -42,6 +43,7 @@ export type Database = {
           album?: string | null
           artist?: string | null
           created_at?: string | null
+          creator?: string | null
           description?: string | null
           downvotes?: number | null
           duration_seconds?: number | null
@@ -65,6 +67,7 @@ export type Database = {
           album?: string | null
           artist?: string | null
           created_at?: string | null
+          creator?: string | null
           description?: string | null
           downvotes?: number | null
           duration_seconds?: number | null
@@ -616,6 +619,7 @@ export interface RequestClaimWithProfile extends RequestClaim {
 export interface SubmissionFormData {
   type: ContentType
   title: string
+  creator?: string
   description?: string
   file?: File
   url?: string
