@@ -10,7 +10,6 @@ export default function RegisterPage() {
   const [displayName, setDisplayName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
 
   const { signUp } = useAuth()
 
@@ -31,29 +30,8 @@ export default function RegisterPage() {
       setError(error.message)
       setIsLoading(false)
     } else {
-      setSuccess(true)
+      window.location.href = '/'
     }
-  }
-
-  if (success) {
-    return (
-      <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-        <div className="text-6xl mb-4">🎉</div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Check your email</h1>
-        <p className="text-gray-600 mb-6">
-          We sent a confirmation link to <strong>{email}</strong>
-        </p>
-        <p className="text-sm text-gray-500">
-          Click the link in your email to activate your account.
-        </p>
-        <Link
-          href="/login"
-          className="mt-6 inline-block text-orange-600 hover:text-orange-700 font-medium"
-        >
-          Back to login
-        </Link>
-      </div>
-    )
   }
 
   return (
