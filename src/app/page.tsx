@@ -8,6 +8,7 @@ const categories = [
     href: '/gifs',
     emoji: '🎬',
     color: 'from-orange-400 to-red-500',
+    thumbnail: 'https://media0.giphy.com/media/v1.Y2lkPWM3NTZiMmU5ZnZmbnpwemFjemM2MmFvNmRobDR1cTlzank3bm1za3M1OXl4N3B4MSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/VF5DpP0WJAb4HVH2Jp/200w_s.gif',
   },
   {
     title: 'Memes',
@@ -15,6 +16,7 @@ const categories = [
     href: '/memes',
     emoji: '😂',
     color: 'from-yellow-400 to-orange-500',
+    thumbnail: 'https://i.redd.it/q1jxnc20okjf1.png',
   },
   {
     title: 'Viral Videos',
@@ -22,6 +24,7 @@ const categories = [
     href: '/videos',
     emoji: '📱',
     color: 'from-red-400 to-pink-500',
+    thumbnail: 'https://img.youtube.com/vi/LmC6IDiQJnc/hqdefault.jpg',
   },
   {
     title: 'Music',
@@ -29,6 +32,7 @@ const categories = [
     href: '/music',
     emoji: '🎵',
     color: 'from-green-400 to-green-600',
+    thumbnail: null,
   },
   {
     title: 'Art',
@@ -36,6 +40,7 @@ const categories = [
     href: '/art',
     emoji: '🎨',
     color: 'from-pink-400 to-purple-600',
+    thumbnail: 'https://64.media.tumblr.com/358f1f7e3840a927ccf9fda4e1b6b348/b95d33c23bcf047c-47/s500x750/907cedd3f898478418aaa842eb809e75a7c550aa.png',
   },
   {
     title: 'Games',
@@ -43,6 +48,7 @@ const categories = [
     href: '/games',
     emoji: '🎮',
     color: 'from-indigo-400 to-purple-600',
+    thumbnail: 'https://media.rawg.io/media/screenshots/bd0/bd09882de5874cd675d723f646b033b8.jpg',
   },
 ]
 
@@ -52,7 +58,7 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-orange-500 to-red-600 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center justify-center gap-6 mb-6">
+          <div className="flex items-center justify-center gap-2 mb-6">
             <Image
               src="/logo.png"
               alt="Pizza Sauce"
@@ -98,16 +104,28 @@ export default function HomePage() {
                 href={category.href}
                 className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-shadow"
               >
-                <div className={`bg-gradient-to-br ${category.color} p-8 h-64 flex flex-col justify-end`}>
-                  <span className="text-6xl mb-4 group-hover:scale-110 transition-transform inline-block">
-                    {category.emoji}
-                  </span>
-                  <h3 className="text-2xl font-bold text-white mb-2">
-                    {category.title}
-                  </h3>
-                  <p className="text-white/80">
-                    {category.description}
-                  </p>
+                <div className="relative h-64 flex flex-col justify-end">
+                  {category.thumbnail ? (
+                    <img
+                      src={category.thumbnail}
+                      alt={category.title}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className={`absolute inset-0 bg-gradient-to-br ${category.color}`} />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                  <div className="relative p-8">
+                    <span className="text-6xl mb-4 group-hover:scale-110 transition-transform inline-block">
+                      {category.emoji}
+                    </span>
+                    <h3 className="text-2xl font-bold text-white mb-2">
+                      {category.title}
+                    </h3>
+                    <p className="text-white/80">
+                      {category.description}
+                    </p>
+                  </div>
                 </div>
               </Link>
             ))}
