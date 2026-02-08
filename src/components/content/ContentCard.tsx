@@ -229,6 +229,9 @@ export function ContentCard({ item, showType = false, showFavorite = true, showV
         <h3 className="font-medium text-gray-900 truncate" title={item.title}>
           {item.title}
         </h3>
+        {item.creator && (
+          <p className="text-sm text-gray-400 truncate">by {item.creator}</p>
+        )}
         <div className="flex items-center justify-between mt-2">
           {item.tags && item.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
@@ -257,6 +260,11 @@ export function ContentCard({ item, showType = false, showFavorite = true, showV
               {item.source_platform || 'source'}
             </a>
           )}
+        </div>
+
+        {/* Short ID */}
+        <div className="mt-1">
+          <span className="text-xs text-gray-500 font-mono">{item.id.slice(0, 8)}</span>
         </div>
 
         {/* Voting */}

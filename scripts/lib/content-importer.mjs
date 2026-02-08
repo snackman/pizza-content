@@ -221,6 +221,7 @@ export class ContentImporter {
       tags: content.tags || ['pizza'],
       status: 'approved', // No moderation queue
       description: content.description || null,
+      creator: content.creator || null,
       is_viral: content.is_viral || false
     }
 

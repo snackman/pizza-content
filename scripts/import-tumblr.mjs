@@ -329,6 +329,7 @@ function transformPost(post, tag) {
     source_url: post.post_url || `https://${post.blog_name}.tumblr.com/post/${post.id}`,
     source_platform: 'tumblr',
     description: description || null,
+    creator: post.blog_name || null,
     is_viral: isViral,
     tags: ['pizza', ...postTags.slice(0, 5).map(t => t.toLowerCase())],
     // Metadata for logging

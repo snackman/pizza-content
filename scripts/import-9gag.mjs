@@ -155,6 +155,7 @@ function transformPost(post) {
     thumbnail_url: post.images?.imageFbThumbnail?.url || imageUrl,
     source_url: post.url || `https://9gag.com/gag/${post.id}`,
     source_platform: '9gag',
+    creator: null,
     tags: ['pizza', '9gag', ...(post.tags?.map(t => t.key) || [])].slice(0, 10),
     status: 'approved',
     is_viral: (post.upVoteCount > 10000)

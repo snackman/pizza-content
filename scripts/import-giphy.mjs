@@ -151,6 +151,7 @@ function transformGif(gif) {
     source_url: gif.url, // GIPHY page URL
     source_platform: 'giphy',
     description: null,
+    creator: gif.username || gif.user?.username || null,
     is_viral: false,
     // Metadata for tagging
     _username: gif.username,

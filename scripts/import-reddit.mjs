@@ -346,6 +346,7 @@ function transformPost(post, subreddit) {
     source_url: `https://reddit.com${data.permalink}`,
     source_platform: 'reddit',
     description: data.selftext?.slice(0, 500) || null,
+    creator: data.author || null,
     is_viral: data.score > 1000,
     // Additional metadata for tagging
     _score: data.score,

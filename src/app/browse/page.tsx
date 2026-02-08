@@ -152,9 +152,11 @@ export default function BrowsePage() {
 
   const filteredContent = content.filter((item) => {
     if (!searchQuery) return true
+    const query = searchQuery.toLowerCase()
     return (
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.tags?.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      item.title.toLowerCase().includes(query) ||
+      item.tags?.some((tag) => tag.toLowerCase().includes(query)) ||
+      item.creator?.toLowerCase().includes(query)
     )
   })
 

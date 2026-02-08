@@ -185,6 +185,7 @@ async function importMemes(memes, config) {
       source_url: `https://imgflip.com/meme/${meme.id}`,
       source_platform: 'imgflip',
       type: 'meme',
+      creator: null,
       status: 'approved',
     }
 
