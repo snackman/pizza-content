@@ -3,6 +3,13 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient()
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'You must be logged in to vote.' }, { status: 401 })
+    }
+
     const { allStarId, vote } = await request.json()
 
     if (!allStarId || !vote || !['up', 'down'].includes(vote)) {
@@ -12,10 +19,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = await createClient()
-
-    // Use the vote_all_star RPC function
-    // Cast to any since TypeScript types may not include this function yet
     const { data, error } = await supabase
       .rpc('vote_all_star' as any, {
         p_all_star_id: allStarId,
@@ -31,10 +34,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = data as { upvotes: number; downvotes: number } | null
+    const result = data as { upvotes: number; downvotes: number; user_vote: string | null } | null
     return NextResponse.json({
       upvotes: result?.upvotes ?? 0,
       downvotes: result?.downvotes ?? 0,
+      userVote: result?.user_vote ?? null,
     })
   } catch (error) {
     console.error('Vote API error:', error)

@@ -1,44 +1,35 @@
 'use client'
 
-import { useState } from 'react'
 import { PizzaAllStar } from '@/types/all-stars'
+import { VoteButtons } from '@/components/ui/VoteButtons'
+
+type VoteType = 'up' | 'down' | null
 
 interface AllStarCardProps {
   allStar: PizzaAllStar
+  userVote?: VoteType
+  onVote?: (voteType: 'up' | 'down') => Promise<{ upvotes: number; downvotes: number } | null>
 }
 
-export function AllStarCard({ allStar }: AllStarCardProps) {
-  const [upvotes, setUpvotes] = useState(allStar.upvotes)
-  const [downvotes, setDownvotes] = useState(allStar.downvotes)
-  const [isVoting, setIsVoting] = useState(false)
+export function AllStarCard({ allStar, userVote = null, onVote }: AllStarCardProps) {
+  const hasSocials = allStar.instagram_url || allStar.youtube_url || allStar.tiktok_url || allStar.website_url
 
   const handleVote = async (voteType: 'up' | 'down') => {
-    if (isVoting) return
-
-    setIsVoting(true)
-    try {
-      const response = await fetch('/api/all-stars/vote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          allStarId: allStar.id,
-          vote: voteType,
-        }),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setUpvotes(data.upvotes)
-        setDownvotes(data.downvotes)
-      }
-    } catch (error) {
-      console.error('Vote failed:', error)
-    } finally {
-      setIsVoting(false)
+    if (onVote) {
+      return onVote(voteType)
     }
+    // Fallback: direct API call
+    const response = await fetch('/api/all-stars/vote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ allStarId: allStar.id, vote: voteType }),
+    })
+    if (response.ok) {
+      const data = await response.json()
+      return { upvotes: data.upvotes, downvotes: data.downvotes }
+    }
+    return null
   }
-
-  const hasSocials = allStar.instagram_url || allStar.youtube_url || allStar.tiktok_url || allStar.website_url
 
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow">
@@ -128,30 +119,13 @@ export function AllStarCard({ allStar }: AllStarCardProps) {
         )}
 
         {/* Voting */}
-        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-100">
-          <button
-            onClick={() => handleVote('up')}
-            disabled={isVoting}
-            className="flex items-center gap-1 text-gray-600 hover:text-green-600 transition-colors disabled:opacity-50"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-            </svg>
-            <span className="font-medium">{upvotes}</span>
-          </button>
-          <button
-            onClick={() => handleVote('down')}
-            disabled={isVoting}
-            className="flex items-center gap-1 text-gray-600 hover:text-red-600 transition-colors disabled:opacity-50"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-            <span className="font-medium">{downvotes}</span>
-          </button>
-          <span className="text-sm text-gray-400 ml-auto">
-            {upvotes - downvotes > 0 ? '+' : ''}{upvotes - downvotes} net
-          </span>
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <VoteButtons
+            upvotes={allStar.upvotes}
+            downvotes={allStar.downvotes}
+            userVote={userVote}
+            onVote={handleVote}
+          />
         </div>
       </div>
     </div>

@@ -4,11 +4,18 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { Content } from '@/types/database'
 import { FavoriteButton } from '@/components/ui/FavoriteButton'
+import { VoteButtons } from '@/components/ui/VoteButtons'
+import { useAuth } from '@/hooks/useAuth'
+
+type VoteType = 'up' | 'down' | null
 
 interface ContentCardProps {
   item: Content
   showType?: boolean
   showFavorite?: boolean
+  showVoting?: boolean
+  userVote?: VoteType
+  onVote?: (voteType: 'up' | 'down') => Promise<{ upvotes: number; downvotes: number } | null>
   onFlagged?: (id: string) => void
 }
 
@@ -22,13 +29,19 @@ const typeColors: Record<string, string> = {
   game: 'bg-indigo-500',
 }
 
-export function ContentCard({ item, showType = false, showFavorite = true, onFlagged }: ContentCardProps) {
+export function ContentCard({ item, showType = false, showFavorite = true, showVoting = false, userVote = null, onVote, onFlagged }: ContentCardProps) {
   const [showFlagMenu, setShowFlagMenu] = useState(false)
   const [isFlagging, setIsFlagging] = useState(false)
+  const { isAuthenticated } = useAuth()
   const isVideo = item.type === 'video'
   const isMusic = item.type === 'music'
 
   const handleFlag = async (reason: 'not_pizza' | 'broken') => {
+    if (!isAuthenticated) {
+      window.location.href = `/login?redirectTo=${encodeURIComponent(window.location.pathname)}`
+      return
+    }
+
     setIsFlagging(true)
     try {
       const response = await fetch('/api/content/flag', {
@@ -73,6 +86,23 @@ export function ContentCard({ item, showType = false, showFavorite = true, onFla
       // Fallback: open in new tab
       window.open(item.url, '_blank')
     }
+  }
+
+  const handleVote = async (voteType: 'up' | 'down') => {
+    if (onVote) {
+      return onVote(voteType)
+    }
+    // Fallback: direct API call
+    const response = await fetch('/api/content/vote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contentId: item.id, vote: voteType }),
+    })
+    if (response.ok) {
+      const data = await response.json()
+      return { upvotes: data.upvotes, downvotes: data.downvotes }
+    }
+    return null
   }
 
   return (
@@ -153,6 +183,10 @@ export function ContentCard({ item, showType = false, showFavorite = true, onFla
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
+                if (!isAuthenticated) {
+                  window.location.href = `/login?redirectTo=${encodeURIComponent(window.location.pathname)}`
+                  return
+                }
                 setShowFlagMenu(!showFlagMenu)
               }}
               className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70"
@@ -224,6 +258,19 @@ export function ContentCard({ item, showType = false, showFavorite = true, onFla
             </a>
           )}
         </div>
+
+        {/* Voting */}
+        {showVoting && (
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <VoteButtons
+              upvotes={item.upvotes ?? 0}
+              downvotes={item.downvotes ?? 0}
+              userVote={userVote}
+              onVote={handleVote}
+              size="sm"
+            />
+          </div>
+        )}
       </div>
     </div>
   )
