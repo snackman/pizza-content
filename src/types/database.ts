@@ -404,6 +404,98 @@ export type Database = {
           },
         ]
       }
+      recipes: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          sauce_type: string | null
+          cheese_types: string[]
+          toppings: string[]
+          dough_style: string | null
+          cooking_method: Database["public"]["Enums"]["cooking_method"]
+          difficulty: Database["public"]["Enums"]["difficulty_level"]
+          prep_notes: string | null
+          serving_size: string | null
+          image_url: string | null
+          thumbnail_url: string | null
+          source_url: string | null
+          tags: string[]
+          is_vegetarian: boolean
+          is_vegan: boolean
+          upvotes: number
+          downvotes: number
+          view_count: number
+          status: Database["public"]["Enums"]["content_status"] | null
+          submitted_by: string | null
+          creator: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          description: string
+          sauce_type?: string | null
+          cheese_types?: string[]
+          toppings?: string[]
+          dough_style?: string | null
+          cooking_method?: Database["public"]["Enums"]["cooking_method"]
+          difficulty?: Database["public"]["Enums"]["difficulty_level"]
+          prep_notes?: string | null
+          serving_size?: string | null
+          image_url?: string | null
+          thumbnail_url?: string | null
+          source_url?: string | null
+          tags?: string[]
+          is_vegetarian?: boolean
+          is_vegan?: boolean
+          upvotes?: number
+          downvotes?: number
+          view_count?: number
+          status?: Database["public"]["Enums"]["content_status"] | null
+          submitted_by?: string | null
+          creator?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string
+          sauce_type?: string | null
+          cheese_types?: string[]
+          toppings?: string[]
+          dough_style?: string | null
+          cooking_method?: Database["public"]["Enums"]["cooking_method"]
+          difficulty?: Database["public"]["Enums"]["difficulty_level"]
+          prep_notes?: string | null
+          serving_size?: string | null
+          image_url?: string | null
+          thumbnail_url?: string | null
+          source_url?: string | null
+          tags?: string[]
+          is_vegetarian?: boolean
+          is_vegan?: boolean
+          upvotes?: number
+          downvotes?: number
+          view_count?: number
+          status?: Database["public"]["Enums"]["content_status"] | null
+          submitted_by?: string | null
+          creator?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipes_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       view_history: {
         Row: {
           content_id: string
@@ -452,10 +544,19 @@ export type Database = {
           upvotes: number
         }[]
       }
+      vote_recipe: {
+        Args: { p_recipe_id: string; p_vote_type: string }
+        Returns: {
+          downvotes: number
+          upvotes: number
+        }[]
+      }
     }
     Enums: {
       content_status: "pending" | "approved" | "rejected" | "featured" | "flagged_not_pizza" | "flagged_broken"
       content_type: "gif" | "meme" | "video" | "music" | "photo" | "art" | "game"
+      cooking_method: "oven" | "wood_fired" | "grill" | "skillet" | "deep_fried" | "air_fryer" | "no_bake" | "other"
+      difficulty_level: "easy" | "medium" | "hard" | "expert"
       request_status: "open" | "in_progress" | "fulfilled" | "closed"
     }
     CompositeTypes: {
@@ -586,6 +687,8 @@ export const Constants = {
     Enums: {
       content_status: ["pending", "approved", "rejected", "featured", "flagged_not_pizza", "flagged_broken"],
       content_type: ["gif", "meme", "video", "music", "photo", "art", "game"],
+      cooking_method: ["oven", "wood_fired", "grill", "skillet", "deep_fried", "air_fryer", "no_bake", "other"],
+      difficulty_level: ["easy", "medium", "hard", "expert"],
       request_status: ["open", "in_progress", "fulfilled", "closed"],
     },
   },
@@ -595,6 +698,8 @@ export const Constants = {
 export type ContentType = Database['public']['Enums']['content_type']
 export type ContentStatus = Database['public']['Enums']['content_status']
 export type RequestStatus = Database['public']['Enums']['request_status']
+export type DifficultyLevel = Database['public']['Enums']['difficulty_level']
+export type CookingMethod = Database['public']['Enums']['cooking_method']
 
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Content = Database['public']['Tables']['content']['Row']
@@ -604,6 +709,7 @@ export type Favorite = Database['public']['Tables']['favorites']['Row']
 export type ViewHistory = Database['public']['Tables']['view_history']['Row']
 export type ImportSource = Database['public']['Tables']['import_sources']['Row']
 export type ImportLog = Database['public']['Tables']['import_logs']['Row']
+export type Recipe = Database['public']['Tables']['recipes']['Row']
 
 // Extended types for joined queries
 export interface ContentRequestWithProfile extends ContentRequest {

@@ -50,6 +50,14 @@ const categories = [
     color: 'from-indigo-400 to-purple-600',
     thumbnail: 'https://media.rawg.io/media/screenshots/bd0/bd09882de5874cd675d723f646b033b8.jpg',
   },
+  {
+    title: 'Recipes',
+    description: 'Creative pizza recipe ideas',
+    href: '/recipes',
+    emoji: '📖',
+    color: 'from-amber-400 to-orange-600',
+    thumbnail: null,
+  },
 ]
 
 export default function HomePage() {
